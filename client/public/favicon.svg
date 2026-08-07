@@ -1,0 +1,106 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0d0f18"/>
+      <stop offset="0.5" stop-color="#12161f"/>
+      <stop offset="1" stop-color="#1a0f1e"/>
+    </linearGradient>
+    <linearGradient id="headBase" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#241c2e"/>
+      <stop offset="1" stop-color="#181226"/>
+    </linearGradient>
+    <linearGradient id="amber" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ffb64d"/>
+      <stop offset="1" stop-color="#ff7a00"/>
+    </linearGradient>
+    <linearGradient id="magenta" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ff5c8d"/>
+      <stop offset="1" stop-color="#ff2a6d"/>
+    </linearGradient>
+    <radialGradient id="eyeGlow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="0.35" stop-color="#00f0ff"/>
+      <stop offset="1" stop-color="#00f0ff" stop-opacity="0"/>
+    </radialGradient>
+    <clipPath id="headClip">
+      <path d="M176 208 L150 82 L240 142 L272 142 L362 82 L336 208
+               C338 268 356 322 330 374
+               C310 418 296 430 256 430
+               C216 430 202 418 182 374
+               C156 322 174 268 176 208 Z"/>
+    </clipPath>
+  </defs>
+
+  <!-- Background -->
+  <rect x="0" y="0" width="512" height="512" rx="96" fill="url(#bg)"/>
+  <rect x="6" y="6" width="500" height="500" rx="90" fill="none" stroke="#00f0ff" stroke-opacity="0.45" stroke-width="3"/>
+  <rect x="14" y="14" width="484" height="484" rx="84" fill="none" stroke="#ff2a6d" stroke-opacity="0.18" stroke-width="1.5"/>
+
+  <!-- Subtle scanline overlay for cyberpunk texture -->
+  <g opacity="0.06">
+    <line x1="40" y1="64" x2="472" y2="64" stroke="#00f0ff" stroke-width="2"/>
+    <line x1="40" y1="112" x2="472" y2="112" stroke="#00f0ff" stroke-width="2"/>
+    <line x1="40" y1="160" x2="472" y2="160" stroke="#00f0ff" stroke-width="2"/>
+    <line x1="40" y1="352" x2="472" y2="352" stroke="#ff2a6d" stroke-width="2"/>
+    <line x1="40" y1="400" x2="472" y2="400" stroke="#ff2a6d" stroke-width="2"/>
+    <line x1="40" y1="448" x2="472" y2="448" stroke="#ff2a6d" stroke-width="2"/>
+  </g>
+
+  <!-- Cat head base -->
+  <path d="M176 208 L150 82 L240 142 L272 142 L362 82 L336 208
+           C338 268 356 322 330 374
+           C310 418 296 430 256 430
+           C216 430 202 418 182 374
+           C156 322 174 268 176 208 Z" fill="url(#headBase)" stroke="#00f0ff" stroke-opacity="0.35" stroke-width="2"/>
+
+  <!-- Tortoiseshell patches -->
+  <g clip-path="url(#headClip)">
+    <!-- Amber patch (left) -->
+    <path d="M150 82 L200 130 C190 180 176 210 186 260 C196 300 170 340 156 322
+             C140 300 148 240 140 190 Z" fill="url(#amber)" opacity="0.95"/>
+    <!-- Magenta patch (right cheek/ear) -->
+    <path d="M362 82 L320 130 C336 190 356 240 340 300 C330 340 350 380 362 360
+             C376 330 368 260 372 200 Z" fill="url(#magenta)" opacity="0.9"/>
+    <!-- Dark chocolate patch (top center) -->
+    <path d="M226 130 L286 130 C276 190 290 250 256 270 C222 250 236 190 226 130 Z" fill="#2b2033" opacity="0.9"/>
+    <!-- Amber speck near right eye -->
+    <circle cx="318" cy="210" r="16" fill="#ff9f1c" opacity="0.85"/>
+    <circle cx="192" cy="330" r="12" fill="#ff7a00" opacity="0.6"/>
+  </g>
+
+  <!-- Muzzle shading -->
+  <ellipse cx="256" cy="360" rx="56" ry="34" fill="#0f0b18" opacity="0.5"/>
+
+  <!-- Eyes (glowing cyan) -->
+  <ellipse cx="204" cy="252" rx="30" ry="22" fill="url(#eyeGlow)"/>
+  <ellipse cx="308" cy="252" rx="30" ry="22" fill="url(#eyeGlow)"/>
+  <ellipse cx="204" cy="252" rx="20" ry="13" fill="#00f0ff"/>
+  <ellipse cx="308" cy="252" rx="20" ry="13" fill="#00f0ff"/>
+  <!-- slit pupils -->
+  <ellipse cx="204" cy="252" rx="5" ry="11" fill="#04121a"/>
+  <ellipse cx="308" cy="252" rx="5" ry="11" fill="#04121a"/>
+  <ellipse cx="210" cy="246" rx="5" ry="3" fill="#ffffff" opacity="0.9"/>
+  <ellipse cx="314" cy="246" rx="5" ry="3" fill="#ffffff" opacity="0.9"/>
+
+  <!-- Nose -->
+  <path d="M246 306 L266 306 L256 320 Z" fill="#ff2a6d"/>
+  <!-- Mouth -->
+  <path d="M256 320 C256 336 244 340 236 334 M256 320 C256 336 268 340 276 334"
+        fill="none" stroke="#8b93a7" stroke-width="2.5" stroke-linecap="round"/>
+
+  <!-- Whiskers (neon cyan) -->
+  <g stroke="#00f0ff" stroke-width="2.5" stroke-linecap="round" opacity="0.85">
+    <line x1="178" y1="292" x2="112" y2="282"/>
+    <line x1="176" y1="306" x2="110" y2="312"/>
+    <line x1="180" y1="322" x2="126" y2="340"/>
+    <line x1="334" y1="292" x2="400" y2="282"/>
+    <line x1="336" y1="306" x2="402" y2="312"/>
+    <line x1="332" y1="322" x2="386" y2="340"/>
+  </g>
+
+  <!-- Checkmark badge (acid yellow), centered so it also works for maskable icons -->
+  <circle cx="256" cy="392" r="58" fill="#0d0f18" stroke="#ccff00" stroke-width="6"/>
+  <path d="M226 392 L248 414 L288 366" fill="none" stroke="#ccff00" stroke-width="18"
+        stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="256" cy="392" r="58" fill="none" stroke="#ccff00" stroke-opacity="0.35" stroke-width="2"/>
+</svg>

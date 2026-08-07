@@ -1,0 +1,19 @@
+{
+  "name": "kanbate-server",
+  "version": "1.0.0",
+  "description": "Kanbate backend API - Express + SQLite",
+  "private": true,
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node --watch index.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.3.0",
+    "express": "^4.19.2"
+  }
+}

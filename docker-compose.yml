@@ -1,0 +1,24 @@
+services:
+  kanbate:
+    build: .
+    image: ghcr.io/${GITHUB_REPOSITORY_OWNER:-your-github-user}/kanbate:${KANBATE_TAG:-latest}
+    container_name: kanbate
+    restart: unless-stopped
+    # Map host port to the container's internal port.
+    # OMV uses port 80 for its own web UI, so Kanbate defaults to 3000.
+    # To serve Kanbate on a different port, change the left-hand side, e.g. "80:3000".
+    ports:
+      - "${KANBATE_PORT:-3000}:3000"
+    environment:
+      - TZ=${TZ:-Europe/Berlin}
+    volumes:
+      # SQLite database lives in ./data/kanbate.db on the host -> survives container updates.
+      - ./data:/data
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3000/api/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+    # Optional: keep memory usage bounded
+    mem_limit: 512m

@@ -1,0 +1,104 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-text-size-adjust: 100%;
+    scrollbar-color: #2a3350 #0d0f18;
+  }
+
+  body {
+    @apply bg-backdrop text-ink-primary font-mono antialiased;
+    min-height: 100dvh;
+    overflow-x: hidden;
+  }
+
+  /* Cyberpunk backdrop: subtle grid + vignette + scanlines */
+  #root {
+    min-height: 100dvh;
+    background-image:
+      radial-gradient(circle at 15% 10%, rgba(0, 240, 255, 0.07), transparent 40%),
+      radial-gradient(circle at 85% 90%, rgba(255, 42, 109, 0.06), transparent 40%),
+      linear-gradient(rgba(0, 240, 255, 0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0, 240, 255, 0.03) 1px, transparent 1px);
+    background-size: 100% 100%, 100% 100%, 44px 44px, 44px 44px;
+  }
+
+  ::selection {
+    background: rgba(0, 240, 255, 0.35);
+    color: #fff;
+  }
+
+  input,
+  select,
+  textarea,
+  button {
+    font-family: inherit;
+  }
+}
+
+@layer components {
+  .panel {
+    @apply bg-panel border border-edge rounded-lg shadow-panel;
+  }
+
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-md px-3 py-1.5 text-xs uppercase tracking-widest font-semibold border transition-colors duration-150 cursor-pointer select-none;
+  }
+  .btn-cyan {
+    @apply border-neon-cyan/60 text-neon-cyan bg-neon-cyan/10 hover:bg-neon-cyan/20;
+  }
+  .btn-magenta {
+    @apply border-neon-magenta/60 text-neon-magenta bg-neon-magenta/10 hover:bg-neon-magenta/20;
+  }
+  .btn-ghost {
+    @apply border-edge text-ink-muted bg-transparent hover:text-ink-primary hover:border-ink-faint;
+  }
+  .btn-solid {
+    @apply border-neon-cyan bg-neon-cyan/15 text-neon-cyan shadow-neon-cyan hover:bg-neon-cyan/25;
+  }
+
+  .field {
+    @apply w-full bg-backdrop border border-edge rounded-md px-3 py-2 text-sm text-ink-primary placeholder-ink-faint focus:outline-none focus:border-neon-cyan focus:shadow-neon-cyan transition;
+  }
+
+  .label {
+    @apply block text-[10px] uppercase tracking-[0.2em] text-ink-muted mb-1.5;
+  }
+
+  .chip {
+    @apply inline-flex items-center gap-1.5 rounded px-1.5 py-0.5 text-[10px] uppercase tracking-wider font-semibold;
+  }
+
+  /* Reusable neon title with glitch underline */
+  .glitch-title {
+    @apply font-bold tracking-tight;
+    text-shadow: 0 0 8px rgba(0, 240, 255, 0.55);
+  }
+
+  .scroll-slim::-webkit-scrollbar {
+    height: 8px;
+    width: 8px;
+  }
+  .scroll-slim::-webkit-scrollbar-thumb {
+    background: #2a3350;
+    border-radius: 4px;
+  }
+  .scroll-slim::-webkit-scrollbar-track {
+    background: transparent;
+  }
+}
+
+@layer utilities {
+  .safe-top {
+    padding-top: env(safe-area-inset-top);
+  }
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .pb-safe {
+    padding-bottom: max(env(safe-area-inset-bottom), 1rem);
+  }
+}
