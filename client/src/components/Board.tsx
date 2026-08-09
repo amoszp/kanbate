@@ -145,14 +145,15 @@ export function Board({
         </div>
       </div>
 
-      {/* Kanban columns — horizontally scrollable so all 4 fit on iPhone */}
-      <div className="grid grid-cols-4 gap-3 overflow-x-auto scroll-slim pb-2 -mx-1 px-1">
+      {/* Kanban columns — stack vertically (full width) on phones for touch-friendly
+          dragging; switch to a horizontally scrollable 4-column grid on large screens */}
+      <div className="flex flex-col gap-3 scroll-slim pb-2 -mx-1 px-1 lg:grid lg:grid-cols-4 lg:overflow-x-auto">
         {COLUMNS.map((col) => {
           const tasks = tasksByStatus(col.key);
           return (
             <div
               key={col.key}
-              className="flex flex-col min-w-[220px] max-w-[340px] w-full rounded-lg border border-edge bg-panel/60"
+              className="flex flex-col w-full min-w-0 rounded-lg border border-edge bg-panel/60 lg:min-w-[220px] lg:max-w-[340px]"
               onDragOver={(e) => {
                 e.preventDefault();
                 e.dataTransfer.dropEffect = 'move';

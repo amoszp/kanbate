@@ -1,3 +1,4 @@
+import { useCallback, useMemo } from 'react';
 import { useLocalStorage } from './useLocalStorage';
 
 export type ReadState = Record<number, string>;
@@ -9,13 +10,22 @@ export type ReadState = Record<number, string>;
 export function useReadState() {
   const [state, setState] = useLocalStorage<ReadState>('kanbate.readState', {});
 
-  const markRead = (projectId: number) => {
-    setState((prev) => ({ ...prev, [projectId]: new Date().toISOString() }));
-  };
+  // Stable callbacks so consumers (e.g. Board's useEffect deps) don't get a new
+  // function identity on every render — which previously caused an infinite
+  // "maximum update depth exceeded" loop.
+  const markRead = useCallback(
+    (projectId: number) => {
+      setState((prev) => ({ ...prev, [projectId]: new Date().toISOString() }));
+    },
+    [setState]
+  );
 
-  const getLastRead = (projectId: number): string | null => state[projectId] ?? null;
+  const getLastRead = useCallback(
+    (projectId: number): string | null => state[projectId] ?? null,
+    [state]
+  );
 
-  return { readState: state, markRead, getLastRead };
+  return useMemo(() => ({ readState: state, markRead, getLastRead }), [state, markRead, getLastRead]);
 }
 
 export function unreadCount(tasksCreatedAt: string[], lastRead: string | null): number {
