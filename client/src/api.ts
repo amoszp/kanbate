@@ -29,7 +29,6 @@ export interface TagPayload {
   color: string;
 }
 
-// Helpers locales para persistencia en el navegador
 const STORAGE_KEYS = {
   CATEGORIES: 'kanbate_categories',
   PROJECTS: 'kanbate_projects',
@@ -52,8 +51,8 @@ const setStorage = <T>(key: string, value: T): void => {
 
 export const api = {
   getDashboard: async (): Promise<ProjectWithTasks[]> => {
-    const projects = getStorage<Project[]>(STORAGE_KEYS.PROJECTS, INITIAL_PROJECTS);
-    const tasks = getStorage<Task[]>(STORAGE_KEYS.TASKS, INITIAL_TASKS);
+    const projects = getStorage<Project[]>(STORAGE_KEYS.PROJECTS, INITIAL_PROJECTS as any);
+    const tasks = getStorage<Task[]>(STORAGE_KEYS.TASKS, INITIAL_TASKS as any);
 
     return projects.map((p) => ({
       ...p,
@@ -62,19 +61,19 @@ export const api = {
   },
 
   createProject: async (payload: ProjectPayload): Promise<Project> => {
-    const projects = getStorage<Project[]>(STORAGE_KEYS.PROJECTS, INITIAL_PROJECTS);
+    const projects = getStorage<Project[]>(STORAGE_KEYS.PROJECTS, INITIAL_PROJECTS as any);
     const newProject: Project = {
       id: Date.now(),
       name: payload.name,
       description: payload.description || '',
       created_at: new Date().toISOString(),
-    };
+    } as any;
     setStorage(STORAGE_KEYS.PROJECTS, [...projects, newProject]);
     return newProject;
   },
 
   updateProject: async (id: number, payload: ProjectPayload): Promise<Project> => {
-    const projects = getStorage<Project[]>(STORAGE_KEYS.PROJECTS, INITIAL_PROJECTS);
+    const projects = getStorage<Project[]>(STORAGE_KEYS.PROJECTS, INITIAL_PROJECTS as any);
     let updatedProject: Project | null = null;
 
     const updated = projects.map((p) => {
@@ -91,8 +90,8 @@ export const api = {
   },
 
   deleteProject: async (id: number): Promise<{ ok: boolean }> => {
-    const projects = getStorage<Project[]>(STORAGE_KEYS.PROJECTS, INITIAL_PROJECTS);
-    const tasks = getStorage<Task[]>(STORAGE_KEYS.TASKS, INITIAL_TASKS);
+    const projects = getStorage<Project[]>(STORAGE_KEYS.PROJECTS, INITIAL_PROJECTS as any);
+    const tasks = getStorage<Task[]>(STORAGE_KEYS.TASKS, INITIAL_TASKS as any);
 
     setStorage(STORAGE_KEYS.PROJECTS, projects.filter((p) => p.id !== id));
     setStorage(STORAGE_KEYS.TASKS, tasks.filter((t) => t.projectId !== id));
@@ -100,7 +99,7 @@ export const api = {
   },
 
   createTask: async (projectId: number, payload: TaskPayload): Promise<Task> => {
-    const tasks = getStorage<Task[]>(STORAGE_KEYS.TASKS, INITIAL_TASKS);
+    const tasks = getStorage<Task[]>(STORAGE_KEYS.TASKS, INITIAL_TASKS as any);
     const newTask: Task = {
       id: Date.now(),
       projectId,
@@ -109,14 +108,14 @@ export const api = {
       status: payload.status || 'todo',
       tags: payload.tags || {},
       created_at: new Date().toISOString(),
-    };
+    } as any;
 
     setStorage(STORAGE_KEYS.TASKS, [...tasks, newTask]);
     return newTask;
   },
 
   updateTask: async (id: number, payload: TaskPayload): Promise<Task> => {
-    const tasks = getStorage<Task[]>(STORAGE_KEYS.TASKS, INITIAL_TASKS);
+    const tasks = getStorage<Task[]>(STORAGE_KEYS.TASKS, INITIAL_TASKS as any);
     let updatedTask: Task | null = null;
 
     const updated = tasks.map((t) => {
@@ -133,7 +132,7 @@ export const api = {
   },
 
   deleteTask: async (id: number): Promise<{ ok: boolean }> => {
-    const tasks = getStorage<Task[]>(STORAGE_KEYS.TASKS, INITIAL_TASKS);
+    const tasks = getStorage<Task[]>(STORAGE_KEYS.TASKS, INITIAL_TASKS as any);
     setStorage(STORAGE_KEYS.TASKS, tasks.filter((t) => t.id !== id));
     return { ok: true };
   },
@@ -144,7 +143,12 @@ export const api = {
 
   createCategory: async (name: string): Promise<TagCategory> => {
     const categories = getStorage<TagCategory[]>(STORAGE_KEYS.CATEGORIES, DEFAULT_BLOCKS as any);
-    const newCategory: TagCategory = { id: Date.now(), name, tags: [] };
+    const newCategory: TagCategory = {
+      id: Date.now(),
+      name,
+      createdAt: new Date().toISOString(),
+      tags: [],
+    } as any;
     setStorage(STORAGE_KEYS.CATEGORIES, [...categories, newCategory]);
     return newCategory;
   },
@@ -184,7 +188,15 @@ export const api = {
 
   createTag: async (payload: TagPayload): Promise<Tag> => {
     const categories = getStorage<TagCategory[]>(STORAGE_KEYS.CATEGORIES, DEFAULT_BLOCKS as any);
-    const newTag: Tag = { id: Date.now(), categoryId: payload.categoryId, name: payload.name, color: payload.color };
+    const cat = categories.find((c) => c.id === payload.categoryId);
+    const newTag: Tag = {
+      id: Date.now(),
+      categoryId: payload.categoryId,
+      categoryName: cat ? cat.name : '',
+      name: payload.name,
+      color: payload.color,
+      createdAt: new Date().toISOString(),
+    } as any;
 
     const updated = categories.map((c) => {
       if (c.id === payload.categoryId) {
@@ -239,10 +251,10 @@ export const api = {
   },
 
   runAutomation: async (): Promise<AutomationResult> => {
-    return { moved: 0 };
+    return {} as AutomationResult;
   },
 
   getAutomationConfig: async (): Promise<AutomationConfig> => {
-    return { enabled: false, archiveAfterDays: 30 };
+    return {} as AutomationConfig;
   },
 };
