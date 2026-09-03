@@ -42,7 +42,11 @@ const getStorage = <T>(key: string, defaultValue: T): T => {
     localStorage.setItem(key, JSON.stringify(defaultValue));
     return defaultValue;
   }
-  return JSON.parse(stored);
+  try {
+    return JSON.parse(stored);
+  } catch {
+    return defaultValue;
+  }
 };
 
 const setStorage = <T>(key: string, value: T): void => {
@@ -56,7 +60,12 @@ export const api = {
 
     return projects.map((p) => ({
       ...p,
-      tasks: tasks.filter((t) => t.projectId === p.id),
+      tasks: tasks
+        .filter((t) => t.projectId === p.id)
+        .map((t) => ({
+          ...t,
+          tags: t.tags || {},
+        })),
     })) as ProjectWithTasks[];
   },
 
@@ -108,7 +117,7 @@ export const api = {
       title: payload.title || 'Nueva tarea',
       description: payload.description || '',
       status: payload.status || 'todo',
-      tags: payload.tags || [],
+      tags: payload.tags || {},
       created_at: new Date().toISOString(),
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -126,7 +135,7 @@ export const api = {
 
     const updated = tasks.map((t) => {
       if (t.id === id) {
-        updatedTask = { ...t, ...payload } as unknown as Task;
+        updatedTask = { ...t, ...payload, tags: payload.tags || t.tags || {} } as unknown as Task;
         return updatedTask;
       }
       return t;
