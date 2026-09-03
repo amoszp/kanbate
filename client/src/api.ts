@@ -20,7 +20,7 @@ export interface TaskPayload {
   title?: string;
   description?: string;
   status?: TaskStatus;
-  tags?: Record<number, number | null>;
+  tags?: Record<number, number | null> | any;
 }
 
 export interface TagPayload {
@@ -57,17 +57,19 @@ export const api = {
     return projects.map((p) => ({
       ...p,
       tasks: tasks.filter((t) => t.projectId === p.id),
-    }));
+    })) as ProjectWithTasks[];
   },
 
   createProject: async (payload: ProjectPayload): Promise<Project> => {
     const projects = getStorage<Project[]>(STORAGE_KEYS.PROJECTS, INITIAL_PROJECTS as any);
-    const newProject: Project = {
+    const newProject = {
       id: Date.now(),
       name: payload.name,
       description: payload.description || '',
       created_at: new Date().toISOString(),
-    } as any;
+      createdAt: new Date().toISOString(),
+    } as unknown as Project;
+
     setStorage(STORAGE_KEYS.PROJECTS, [...projects, newProject]);
     return newProject;
   },
@@ -78,7 +80,7 @@ export const api = {
 
     const updated = projects.map((p) => {
       if (p.id === id) {
-        updatedProject = { ...p, ...payload };
+        updatedProject = { ...p, ...payload } as unknown as Project;
         return updatedProject;
       }
       return p;
@@ -100,15 +102,19 @@ export const api = {
 
   createTask: async (projectId: number, payload: TaskPayload): Promise<Task> => {
     const tasks = getStorage<Task[]>(STORAGE_KEYS.TASKS, INITIAL_TASKS as any);
-    const newTask: Task = {
+    const newTask = {
       id: Date.now(),
       projectId,
       title: payload.title || 'Nueva tarea',
       description: payload.description || '',
       status: payload.status || 'todo',
-      tags: payload.tags || {},
+      tags: payload.tags || [],
       created_at: new Date().toISOString(),
-    } as any;
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      movedToResolvedAt: null,
+      movedToInProgressAt: null,
+    } as unknown as Task;
 
     setStorage(STORAGE_KEYS.TASKS, [...tasks, newTask]);
     return newTask;
@@ -120,7 +126,7 @@ export const api = {
 
     const updated = tasks.map((t) => {
       if (t.id === id) {
-        updatedTask = { ...t, ...payload };
+        updatedTask = { ...t, ...payload } as unknown as Task;
         return updatedTask;
       }
       return t;
@@ -143,12 +149,13 @@ export const api = {
 
   createCategory: async (name: string): Promise<TagCategory> => {
     const categories = getStorage<TagCategory[]>(STORAGE_KEYS.CATEGORIES, DEFAULT_BLOCKS as any);
-    const newCategory: TagCategory = {
+    const newCategory = {
       id: Date.now(),
       name,
       createdAt: new Date().toISOString(),
       tags: [],
-    } as any;
+    } as unknown as TagCategory;
+
     setStorage(STORAGE_KEYS.CATEGORIES, [...categories, newCategory]);
     return newCategory;
   },
@@ -159,7 +166,7 @@ export const api = {
 
     const updated = categories.map((c) => {
       if (c.id === id) {
-        updatedCat = { ...c, name };
+        updatedCat = { ...c, name } as unknown as TagCategory;
         return updatedCat;
       }
       return c;
@@ -181,22 +188,22 @@ export const api = {
     const allTags = categories.flatMap((c) => c.tags || []);
     if (categoryId !== undefined) {
       const cat = categories.find((c) => c.id === categoryId);
-      return cat ? cat.tags || [] : [];
+      return (cat ? cat.tags || [] : []) as Tag[];
     }
-    return allTags;
+    return allTags as Tag[];
   },
 
   createTag: async (payload: TagPayload): Promise<Tag> => {
     const categories = getStorage<TagCategory[]>(STORAGE_KEYS.CATEGORIES, DEFAULT_BLOCKS as any);
     const cat = categories.find((c) => c.id === payload.categoryId);
-    const newTag: Tag = {
+    const newTag = {
       id: Date.now(),
       categoryId: payload.categoryId,
       categoryName: cat ? cat.name : '',
       name: payload.name,
       color: payload.color,
       createdAt: new Date().toISOString(),
-    } as any;
+    } as unknown as Tag;
 
     const updated = categories.map((c) => {
       if (c.id === payload.categoryId) {
@@ -217,7 +224,7 @@ export const api = {
       ...c,
       tags: (c.tags || []).map((t) => {
         if (t.id === id) {
-          updatedTag = { ...t, ...payload };
+          updatedTag = { ...t, ...payload } as unknown as Tag;
           return updatedTag;
         }
         return t;
