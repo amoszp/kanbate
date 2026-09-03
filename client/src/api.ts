@@ -56,26 +56,50 @@ const setStorage = <T>(key: string, value: T): void => {
 };
 
 export const api = {
-  getDashboard: async (): Promise<ProjectWithTasks[]> => {
+  getDashboard: async (): Promise<any[]> => {
     const rawProjects = getStorage<Project[]>(STORAGE_KEYS.PROJECTS, INITIAL_PROJECTS as any);
     const rawTasks = getStorage<Task[]>(STORAGE_KEYS.TASKS, INITIAL_TASKS as any);
 
     const projects = Array.isArray(rawProjects) ? rawProjects : (INITIAL_PROJECTS as any);
     const tasks = Array.isArray(rawTasks) ? rawTasks : (INITIAL_TASKS as any);
 
-    return projects.map((p: any) => ({
-      id: p?.id || Date.now(),
-      name: p?.name || 'Proyecto Demo',
-      description: p?.description || '',
-      created_at: p?.created_at || new Date().toISOString(),
-      createdAt: p?.createdAt || new Date().toISOString(),
-      tasks: tasks
+    return projects.map((p: any) => {
+      const projectTasks = tasks
         .filter((t: any) => t && t.projectId === p.id)
         .map((t: any) => ({
           ...t,
           tags: t?.tags && typeof t.tags === 'object' ? t.tags : {},
-        })),
-    })) as ProjectWithTasks[];
+        }));
+
+      // Agrupamos las tareas por su columna/estado para satisfacer el contrato del frontend
+      const tasksByStatus: Record<string, any[]> = {
+        backlog: [],
+        todo: [],
+        in_progress: [],
+        resolved: [],
+        done: [],
+      };
+
+      projectTasks.forEach((task: any) => {
+        const status = task.status || 'todo';
+        if (tasksByStatus[status]) {
+          tasksByStatus[status].push(task);
+        } else {
+          tasksByStatus['todo'].push(task);
+        }
+      });
+
+      return {
+        id: p?.id || Date.now(),
+        name: p?.name || 'Proyecto Demo',
+        description: p?.description || '',
+        created_at: p?.created_at || new Date().toISOString(),
+        createdAt: p?.createdAt || new Date().toISOString(),
+        // Enviamos tanto el objeto agrupado como el array plano para cubrir cualquier selector
+        tasks: tasksByStatus,
+        taskList: projectTasks,
+      };
+    });
   },
 
   createProject: async (payload: ProjectPayload): Promise<Project> => {
@@ -127,7 +151,7 @@ export const api = {
       title: payload.title || 'Nueva tarea',
       description: payload.description || '',
       status: payload.status || 'todo',
-      tags: payload.tags || [],
+      tags: payload.tags || {},
       created_at: new Date().toISOString(),
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -145,7 +169,7 @@ export const api = {
 
     const updated = (Array.isArray(tasks) ? tasks : []).map((t: any) => {
       if (t.id === id) {
-        updatedTask = { ...t, ...payload, tags: payload.tags || t.tags || [] } as unknown as Task;
+        updatedTask = { ...t, ...payload, tags: payload.tags || t.tags || {} } as unknown as Task;
         return updatedTask;
       }
       return t;
