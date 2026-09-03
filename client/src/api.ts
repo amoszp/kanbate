@@ -67,11 +67,11 @@ export const api = {
     const projects = Array.isArray(rawProjects) ? rawProjects : (INITIAL_PROJECTS as any);
     const tasks = Array.isArray(rawTasks) ? rawTasks : (INITIAL_TASKS as any);
 
-    return projects.map((p) => ({
+    return projects.map((p: Project) => ({
       ...p,
       tasks: tasks
-        .filter((t) => t && t.projectId === p.id)
-        .map((t) => ({
+        .filter((t: Task) => t && t.projectId === p.id)
+        .map((t: Task) => ({
           ...t,
           tags: t.tags && typeof t.tags === 'object' ? t.tags : {},
         })),
