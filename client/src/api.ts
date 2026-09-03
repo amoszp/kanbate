@@ -73,7 +73,7 @@ export const api = {
         .filter((t: any) => t && t.projectId === p.id)
         .map((t: any) => ({
           ...t,
-          tags: Array.isArray(t?.tags) ? t.tags : (t?.tags && typeof t.tags === 'object' ? Object.values(t.tags) : []),
+          tags: t?.tags && typeof t.tags === 'object' ? t.tags : {},
         })),
     })) as ProjectWithTasks[];
   },
