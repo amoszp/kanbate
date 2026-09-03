@@ -56,7 +56,7 @@ const setStorage = <T>(key: string, value: T): void => {
 };
 
 export const api = {
-  getDashboard: async (): Promise<any[]> => {
+  getDashboard: async (): Promise<ProjectWithTasks[]> => {
     const rawProjects = getStorage<Project[]>(STORAGE_KEYS.PROJECTS, INITIAL_PROJECTS as any);
     const rawTasks = getStorage<Task[]>(STORAGE_KEYS.TASKS, INITIAL_TASKS as any);
 
@@ -71,7 +71,6 @@ export const api = {
           tags: t?.tags && typeof t.tags === 'object' ? t.tags : {},
         }));
 
-      // Agrupamos las tareas por su columna/estado para satisfacer el contrato del frontend
       const tasksByStatus: Record<string, any[]> = {
         backlog: [],
         todo: [],
@@ -95,11 +94,9 @@ export const api = {
         description: p?.description || '',
         created_at: p?.created_at || new Date().toISOString(),
         createdAt: p?.createdAt || new Date().toISOString(),
-        // Enviamos tanto el objeto agrupado como el array plano para cubrir cualquier selector
         tasks: tasksByStatus,
-        taskList: projectTasks,
       };
-    });
+    }) as unknown as ProjectWithTasks[];
   },
 
   createProject: async (payload: ProjectPayload): Promise<Project> => {
