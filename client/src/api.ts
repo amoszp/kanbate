@@ -37,14 +37,20 @@ const STORAGE_KEYS = {
 };
 
 const getStorage = <T>(key: string, defaultValue: T): T => {
-  const stored = localStorage.getItem(key);
-  if (!stored) {
-    localStorage.setItem(key, JSON.stringify(defaultValue));
-    return defaultValue;
-  }
   try {
-    return JSON.parse(stored);
+    const stored = localStorage.getItem(key);
+    if (!stored) {
+      localStorage.setItem(key, JSON.stringify(defaultValue));
+      return defaultValue;
+    }
+    const parsed = JSON.parse(stored);
+    if (parsed === null || parsed === undefined) {
+      localStorage.setItem(key, JSON.stringify(defaultValue));
+      return defaultValue;
+    }
+    return parsed;
   } catch {
+    localStorage.setItem(key, JSON.stringify(defaultValue));
     return defaultValue;
   }
 };
@@ -55,16 +61,19 @@ const setStorage = <T>(key: string, value: T): void => {
 
 export const api = {
   getDashboard: async (): Promise<ProjectWithTasks[]> => {
-    const projects = getStorage<Project[]>(STORAGE_KEYS.PROJECTS, INITIAL_PROJECTS as any);
-    const tasks = getStorage<Task[]>(STORAGE_KEYS.TASKS, INITIAL_TASKS as any);
+    const rawProjects = getStorage<Project[]>(STORAGE_KEYS.PROJECTS, INITIAL_PROJECTS as any);
+    const rawTasks = getStorage<Task[]>(STORAGE_KEYS.TASKS, INITIAL_TASKS as any);
+
+    const projects = Array.isArray(rawProjects) ? rawProjects : (INITIAL_PROJECTS as any);
+    const tasks = Array.isArray(rawTasks) ? rawTasks : (INITIAL_TASKS as any);
 
     return projects.map((p) => ({
       ...p,
       tasks: tasks
-        .filter((t) => t.projectId === p.id)
+        .filter((t) => t && t.projectId === p.id)
         .map((t) => ({
           ...t,
-          tags: t.tags || {},
+          tags: t.tags && typeof t.tags === 'object' ? t.tags : {},
         })),
     })) as ProjectWithTasks[];
   },
@@ -79,7 +88,7 @@ export const api = {
       createdAt: new Date().toISOString(),
     } as unknown as Project;
 
-    setStorage(STORAGE_KEYS.PROJECTS, [...projects, newProject]);
+    setStorage(STORAGE_KEYS.PROJECTS, [...(Array.isArray(projects) ? projects : []), newProject]);
     return newProject;
   },
 
@@ -87,7 +96,7 @@ export const api = {
     const projects = getStorage<Project[]>(STORAGE_KEYS.PROJECTS, INITIAL_PROJECTS as any);
     let updatedProject: Project | null = null;
 
-    const updated = projects.map((p) => {
+    const updated = (Array.isArray(projects) ? projects : []).map((p) => {
       if (p.id === id) {
         updatedProject = { ...p, ...payload } as unknown as Project;
         return updatedProject;
@@ -104,8 +113,8 @@ export const api = {
     const projects = getStorage<Project[]>(STORAGE_KEYS.PROJECTS, INITIAL_PROJECTS as any);
     const tasks = getStorage<Task[]>(STORAGE_KEYS.TASKS, INITIAL_TASKS as any);
 
-    setStorage(STORAGE_KEYS.PROJECTS, projects.filter((p) => p.id !== id));
-    setStorage(STORAGE_KEYS.TASKS, tasks.filter((t) => t.projectId !== id));
+    setStorage(STORAGE_KEYS.PROJECTS, (Array.isArray(projects) ? projects : []).filter((p) => p.id !== id));
+    setStorage(STORAGE_KEYS.TASKS, (Array.isArray(tasks) ? tasks : []).filter((t) => t.projectId !== id));
     return { ok: true };
   },
 
@@ -125,7 +134,7 @@ export const api = {
       movedToInProgressAt: null,
     } as unknown as Task;
 
-    setStorage(STORAGE_KEYS.TASKS, [...tasks, newTask]);
+    setStorage(STORAGE_KEYS.TASKS, [...(Array.isArray(tasks) ? tasks : []), newTask]);
     return newTask;
   },
 
@@ -133,7 +142,7 @@ export const api = {
     const tasks = getStorage<Task[]>(STORAGE_KEYS.TASKS, INITIAL_TASKS as any);
     let updatedTask: Task | null = null;
 
-    const updated = tasks.map((t) => {
+    const updated = (Array.isArray(tasks) ? tasks : []).map((t) => {
       if (t.id === id) {
         updatedTask = { ...t, ...payload, tags: payload.tags || t.tags || {} } as unknown as Task;
         return updatedTask;
@@ -148,12 +157,17 @@ export const api = {
 
   deleteTask: async (id: number): Promise<{ ok: boolean }> => {
     const tasks = getStorage<Task[]>(STORAGE_KEYS.TASKS, INITIAL_TASKS as any);
-    setStorage(STORAGE_KEYS.TASKS, tasks.filter((t) => t.id !== id));
+    setStorage(STORAGE_KEYS.TASKS, (Array.isArray(tasks) ? tasks : []).filter((t) => t.id !== id));
     return { ok: true };
   },
 
   getCategories: async (): Promise<TagCategory[]> => {
-    return getStorage<TagCategory[]>(STORAGE_KEYS.CATEGORIES, DEFAULT_BLOCKS as any);
+    const categories = getStorage<TagCategory[]>(STORAGE_KEYS.CATEGORIES, DEFAULT_BLOCKS as any);
+    if (!Array.isArray(categories)) return DEFAULT_BLOCKS as any;
+    return categories.map((c) => ({
+      ...c,
+      tags: Array.isArray(c.tags) ? c.tags : [],
+    }));
   },
 
   createCategory: async (name: string): Promise<TagCategory> => {
@@ -165,7 +179,7 @@ export const api = {
       tags: [],
     } as unknown as TagCategory;
 
-    setStorage(STORAGE_KEYS.CATEGORIES, [...categories, newCategory]);
+    setStorage(STORAGE_KEYS.CATEGORIES, [...(Array.isArray(categories) ? categories : []), newCategory]);
     return newCategory;
   },
 
@@ -173,7 +187,7 @@ export const api = {
     const categories = getStorage<TagCategory[]>(STORAGE_KEYS.CATEGORIES, DEFAULT_BLOCKS as any);
     let updatedCat: TagCategory | null = null;
 
-    const updated = categories.map((c) => {
+    const updated = (Array.isArray(categories) ? categories : []).map((c) => {
       if (c.id === id) {
         updatedCat = { ...c, name } as unknown as TagCategory;
         return updatedCat;
@@ -188,23 +202,25 @@ export const api = {
 
   deleteCategory: async (id: number): Promise<{ ok: boolean }> => {
     const categories = getStorage<TagCategory[]>(STORAGE_KEYS.CATEGORIES, DEFAULT_BLOCKS as any);
-    setStorage(STORAGE_KEYS.CATEGORIES, categories.filter((c) => c.id !== id));
+    setStorage(STORAGE_KEYS.CATEGORIES, (Array.isArray(categories) ? categories : []).filter((c) => c.id !== id));
     return { ok: true };
   },
 
   getTags: async (categoryId?: number): Promise<Tag[]> => {
     const categories = getStorage<TagCategory[]>(STORAGE_KEYS.CATEGORIES, DEFAULT_BLOCKS as any);
-    const allTags = categories.flatMap((c) => c.tags || []);
+    const safeCategories = Array.isArray(categories) ? categories : [];
+    const allTags = safeCategories.flatMap((c) => (Array.isArray(c.tags) ? c.tags : []));
     if (categoryId !== undefined) {
-      const cat = categories.find((c) => c.id === categoryId);
-      return (cat ? cat.tags || [] : []) as Tag[];
+      const cat = safeCategories.find((c) => c.id === categoryId);
+      return (cat && Array.isArray(cat.tags) ? cat.tags : []) as Tag[];
     }
     return allTags as Tag[];
   },
 
   createTag: async (payload: TagPayload): Promise<Tag> => {
     const categories = getStorage<TagCategory[]>(STORAGE_KEYS.CATEGORIES, DEFAULT_BLOCKS as any);
-    const cat = categories.find((c) => c.id === payload.categoryId);
+    const safeCategories = Array.isArray(categories) ? categories : [];
+    const cat = safeCategories.find((c) => c.id === payload.categoryId);
     const newTag = {
       id: Date.now(),
       categoryId: payload.categoryId,
@@ -214,9 +230,10 @@ export const api = {
       createdAt: new Date().toISOString(),
     } as unknown as Tag;
 
-    const updated = categories.map((c) => {
+    const updated = safeCategories.map((c) => {
       if (c.id === payload.categoryId) {
-        return { ...c, tags: [...(c.tags || []), newTag] };
+        const existingTags = Array.isArray(c.tags) ? c.tags : [];
+        return { ...c, tags: [...existingTags, newTag] };
       }
       return c;
     });
@@ -229,9 +246,9 @@ export const api = {
     const categories = getStorage<TagCategory[]>(STORAGE_KEYS.CATEGORIES, DEFAULT_BLOCKS as any);
     let updatedTag: Tag | null = null;
 
-    const updated = categories.map((c) => ({
+    const updated = (Array.isArray(categories) ? categories : []).map((c) => ({
       ...c,
-      tags: (c.tags || []).map((t) => {
+      tags: (Array.isArray(c.tags) ? c.tags : []).map((t) => {
         if (t.id === id) {
           updatedTag = { ...t, ...payload } as unknown as Tag;
           return updatedTag;
@@ -247,9 +264,9 @@ export const api = {
 
   deleteTag: async (id: number): Promise<{ ok: boolean }> => {
     const categories = getStorage<TagCategory[]>(STORAGE_KEYS.CATEGORIES, DEFAULT_BLOCKS as any);
-    const updated = categories.map((c) => ({
+    const updated = (Array.isArray(categories) ? categories : []).map((c) => ({
       ...c,
-      tags: (c.tags || []).filter((t) => t.id !== id),
+      tags: (Array.isArray(c.tags) ? c.tags : []).filter((t) => t.id !== id),
     }));
 
     setStorage(STORAGE_KEYS.CATEGORIES, updated);
@@ -257,12 +274,13 @@ export const api = {
   },
 
   getHistory: async (_projectId: number): Promise<HistoryEntry[]> => {
-    return getStorage<HistoryEntry[]>(STORAGE_KEYS.HISTORY, []);
+    const history = getStorage<HistoryEntry[]>(STORAGE_KEYS.HISTORY, []);
+    return Array.isArray(history) ? history : [];
   },
 
   deleteHistoryEntry: async (id: number): Promise<{ ok: boolean }> => {
     const history = getStorage<HistoryEntry[]>(STORAGE_KEYS.HISTORY, []);
-    setStorage(STORAGE_KEYS.HISTORY, history.filter((h) => h.id !== id));
+    setStorage(STORAGE_KEYS.HISTORY, (Array.isArray(history) ? history : []).filter((h) => h.id !== id));
     return { ok: true };
   },
 
