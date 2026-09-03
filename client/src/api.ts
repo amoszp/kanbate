@@ -9,24 +9,7 @@ import type {
   Task,
   TaskStatus,
 } from './types';
-
-async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(path, {
-    headers: { 'Content-Type': 'application/json' },
-    ...init,
-  });
-  if (!res.ok) {
-    let message = `Request failed (${res.status})`;
-    try {
-      const body = await res.json();
-      if (body?.error) message = body.error;
-    } catch {
-      /* ignore */
-    }
-    throw new Error(message);
-  }
-  return res.json() as Promise<T>;
-}
+import { DEFAULT_BLOCKS, INITIAL_PROJECTS, INITIAL_TASKS } from './mockData';
 
 export interface ProjectPayload {
   name: string;
@@ -46,39 +29,220 @@ export interface TagPayload {
   color: string;
 }
 
+// Helpers locales para persistencia en el navegador
+const STORAGE_KEYS = {
+  CATEGORIES: 'kanbate_categories',
+  PROJECTS: 'kanbate_projects',
+  TASKS: 'kanbate_tasks',
+  HISTORY: 'kanbate_history',
+};
+
+const getStorage = <T>(key: string, defaultValue: T): T => {
+  const stored = localStorage.getItem(key);
+  if (!stored) {
+    localStorage.setItem(key, JSON.stringify(defaultValue));
+    return defaultValue;
+  }
+  return JSON.parse(stored);
+};
+
+const setStorage = <T>(key: string, value: T): void => {
+  localStorage.setItem(key, JSON.stringify(value));
+};
+
 export const api = {
-  getDashboard: () => request<ProjectWithTasks[]>('/api/dashboard'),
+  getDashboard: async (): Promise<ProjectWithTasks[]> => {
+    const projects = getStorage<Project[]>(STORAGE_KEYS.PROJECTS, INITIAL_PROJECTS);
+    const tasks = getStorage<Task[]>(STORAGE_KEYS.TASKS, INITIAL_TASKS);
 
-  createProject: (payload: ProjectPayload) =>
-    request<Project>('/api/projects', { method: 'POST', body: JSON.stringify(payload) }),
-  updateProject: (id: number, payload: ProjectPayload) =>
-    request<Project>(`/api/projects/${id}`, { method: 'PUT', body: JSON.stringify(payload) }),
-  deleteProject: (id: number) => request<{ ok: boolean }>(`/api/projects/${id}`, { method: 'DELETE' }),
+    return projects.map((p) => ({
+      ...p,
+      tasks: tasks.filter((t) => t.projectId === p.id),
+    }));
+  },
 
-  createTask: (projectId: number, payload: TaskPayload) =>
-    request<Task>(`/api/tasks/project/${projectId}`, { method: 'POST', body: JSON.stringify(payload) }),
-  updateTask: (id: number, payload: TaskPayload) =>
-    request<Task>(`/api/tasks/${id}`, { method: 'PUT', body: JSON.stringify(payload) }),
-  deleteTask: (id: number) => request<{ ok: boolean }>(`/api/tasks/${id}`, { method: 'DELETE' }),
+  createProject: async (payload: ProjectPayload): Promise<Project> => {
+    const projects = getStorage<Project[]>(STORAGE_KEYS.PROJECTS, INITIAL_PROJECTS);
+    const newProject: Project = {
+      id: Date.now(),
+      name: payload.name,
+      description: payload.description || '',
+      created_at: new Date().toISOString(),
+    };
+    setStorage(STORAGE_KEYS.PROJECTS, [...projects, newProject]);
+    return newProject;
+  },
 
-  getCategories: () => request<TagCategory[]>('/api/categories'),
-  createCategory: (name: string) =>
-    request<TagCategory>('/api/categories', { method: 'POST', body: JSON.stringify({ name }) }),
-  updateCategory: (id: number, name: string) =>
-    request<TagCategory>(`/api/categories/${id}`, { method: 'PUT', body: JSON.stringify({ name }) }),
-  deleteCategory: (id: number) => request<{ ok: boolean }>(`/api/categories/${id}`, { method: 'DELETE' }),
+  updateProject: async (id: number, payload: ProjectPayload): Promise<Project> => {
+    const projects = getStorage<Project[]>(STORAGE_KEYS.PROJECTS, INITIAL_PROJECTS);
+    let updatedProject: Project | null = null;
 
-  getTags: (categoryId?: number) =>
-    request<Tag[]>(`/api/tags${categoryId !== undefined ? `?categoryId=${categoryId}` : ''}`),
-  createTag: (payload: TagPayload) =>
-    request<Tag>('/api/tags', { method: 'POST', body: JSON.stringify(payload) }),
-  updateTag: (id: number, payload: { name?: string; color?: string }) =>
-    request<Tag>(`/api/tags/${id}`, { method: 'PUT', body: JSON.stringify(payload) }),
-  deleteTag: (id: number) => request<{ ok: boolean }>(`/api/tags/${id}`, { method: 'DELETE' }),
+    const updated = projects.map((p) => {
+      if (p.id === id) {
+        updatedProject = { ...p, ...payload };
+        return updatedProject;
+      }
+      return p;
+    });
 
-  getHistory: (projectId: number) => request<HistoryEntry[]>(`/api/history/project/${projectId}`),
-  deleteHistoryEntry: (id: number) => request<{ ok: boolean }>(`/api/history/${id}`, { method: 'DELETE' }),
+    setStorage(STORAGE_KEYS.PROJECTS, updated);
+    if (!updatedProject) throw new Error('Project not found');
+    return updatedProject;
+  },
 
-  runAutomation: () => request<AutomationResult>('/api/automation/run', { method: 'POST' }),
-  getAutomationConfig: () => request<AutomationConfig>('/api/automation/config'),
+  deleteProject: async (id: number): Promise<{ ok: boolean }> => {
+    const projects = getStorage<Project[]>(STORAGE_KEYS.PROJECTS, INITIAL_PROJECTS);
+    const tasks = getStorage<Task[]>(STORAGE_KEYS.TASKS, INITIAL_TASKS);
+
+    setStorage(STORAGE_KEYS.PROJECTS, projects.filter((p) => p.id !== id));
+    setStorage(STORAGE_KEYS.TASKS, tasks.filter((t) => t.projectId !== id));
+    return { ok: true };
+  },
+
+  createTask: async (projectId: number, payload: TaskPayload): Promise<Task> => {
+    const tasks = getStorage<Task[]>(STORAGE_KEYS.TASKS, INITIAL_TASKS);
+    const newTask: Task = {
+      id: Date.now(),
+      projectId,
+      title: payload.title || 'Nueva tarea',
+      description: payload.description || '',
+      status: payload.status || 'todo',
+      tags: payload.tags || {},
+      created_at: new Date().toISOString(),
+    };
+
+    setStorage(STORAGE_KEYS.TASKS, [...tasks, newTask]);
+    return newTask;
+  },
+
+  updateTask: async (id: number, payload: TaskPayload): Promise<Task> => {
+    const tasks = getStorage<Task[]>(STORAGE_KEYS.TASKS, INITIAL_TASKS);
+    let updatedTask: Task | null = null;
+
+    const updated = tasks.map((t) => {
+      if (t.id === id) {
+        updatedTask = { ...t, ...payload };
+        return updatedTask;
+      }
+      return t;
+    });
+
+    setStorage(STORAGE_KEYS.TASKS, updated);
+    if (!updatedTask) throw new Error('Task not found');
+    return updatedTask;
+  },
+
+  deleteTask: async (id: number): Promise<{ ok: boolean }> => {
+    const tasks = getStorage<Task[]>(STORAGE_KEYS.TASKS, INITIAL_TASKS);
+    setStorage(STORAGE_KEYS.TASKS, tasks.filter((t) => t.id !== id));
+    return { ok: true };
+  },
+
+  getCategories: async (): Promise<TagCategory[]> => {
+    return getStorage<TagCategory[]>(STORAGE_KEYS.CATEGORIES, DEFAULT_BLOCKS as any);
+  },
+
+  createCategory: async (name: string): Promise<TagCategory> => {
+    const categories = getStorage<TagCategory[]>(STORAGE_KEYS.CATEGORIES, DEFAULT_BLOCKS as any);
+    const newCategory: TagCategory = { id: Date.now(), name, tags: [] };
+    setStorage(STORAGE_KEYS.CATEGORIES, [...categories, newCategory]);
+    return newCategory;
+  },
+
+  updateCategory: async (id: number, name: string): Promise<TagCategory> => {
+    const categories = getStorage<TagCategory[]>(STORAGE_KEYS.CATEGORIES, DEFAULT_BLOCKS as any);
+    let updatedCat: TagCategory | null = null;
+
+    const updated = categories.map((c) => {
+      if (c.id === id) {
+        updatedCat = { ...c, name };
+        return updatedCat;
+      }
+      return c;
+    });
+
+    setStorage(STORAGE_KEYS.CATEGORIES, updated);
+    if (!updatedCat) throw new Error('Category not found');
+    return updatedCat;
+  },
+
+  deleteCategory: async (id: number): Promise<{ ok: boolean }> => {
+    const categories = getStorage<TagCategory[]>(STORAGE_KEYS.CATEGORIES, DEFAULT_BLOCKS as any);
+    setStorage(STORAGE_KEYS.CATEGORIES, categories.filter((c) => c.id !== id));
+    return { ok: true };
+  },
+
+  getTags: async (categoryId?: number): Promise<Tag[]> => {
+    const categories = getStorage<TagCategory[]>(STORAGE_KEYS.CATEGORIES, DEFAULT_BLOCKS as any);
+    const allTags = categories.flatMap((c) => c.tags || []);
+    if (categoryId !== undefined) {
+      const cat = categories.find((c) => c.id === categoryId);
+      return cat ? cat.tags || [] : [];
+    }
+    return allTags;
+  },
+
+  createTag: async (payload: TagPayload): Promise<Tag> => {
+    const categories = getStorage<TagCategory[]>(STORAGE_KEYS.CATEGORIES, DEFAULT_BLOCKS as any);
+    const newTag: Tag = { id: Date.now(), categoryId: payload.categoryId, name: payload.name, color: payload.color };
+
+    const updated = categories.map((c) => {
+      if (c.id === payload.categoryId) {
+        return { ...c, tags: [...(c.tags || []), newTag] };
+      }
+      return c;
+    });
+
+    setStorage(STORAGE_KEYS.CATEGORIES, updated);
+    return newTag;
+  },
+
+  updateTag: async (id: number, payload: { name?: string; color?: string }): Promise<Tag> => {
+    const categories = getStorage<TagCategory[]>(STORAGE_KEYS.CATEGORIES, DEFAULT_BLOCKS as any);
+    let updatedTag: Tag | null = null;
+
+    const updated = categories.map((c) => ({
+      ...c,
+      tags: (c.tags || []).map((t) => {
+        if (t.id === id) {
+          updatedTag = { ...t, ...payload };
+          return updatedTag;
+        }
+        return t;
+      }),
+    }));
+
+    setStorage(STORAGE_KEYS.CATEGORIES, updated);
+    if (!updatedTag) throw new Error('Tag not found');
+    return updatedTag;
+  },
+
+  deleteTag: async (id: number): Promise<{ ok: boolean }> => {
+    const categories = getStorage<TagCategory[]>(STORAGE_KEYS.CATEGORIES, DEFAULT_BLOCKS as any);
+    const updated = categories.map((c) => ({
+      ...c,
+      tags: (c.tags || []).filter((t) => t.id !== id),
+    }));
+
+    setStorage(STORAGE_KEYS.CATEGORIES, updated);
+    return { ok: true };
+  },
+
+  getHistory: async (_projectId: number): Promise<HistoryEntry[]> => {
+    return getStorage<HistoryEntry[]>(STORAGE_KEYS.HISTORY, []);
+  },
+
+  deleteHistoryEntry: async (id: number): Promise<{ ok: boolean }> => {
+    const history = getStorage<HistoryEntry[]>(STORAGE_KEYS.HISTORY, []);
+    setStorage(STORAGE_KEYS.HISTORY, history.filter((h) => h.id !== id));
+    return { ok: true };
+  },
+
+  runAutomation: async (): Promise<AutomationResult> => {
+    return { moved: 0 };
+  },
+
+  getAutomationConfig: async (): Promise<AutomationConfig> => {
+    return { enabled: false, archiveAfterDays: 30 };
+  },
 };
