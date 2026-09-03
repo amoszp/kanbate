@@ -12,11 +12,3 @@ node_modules/
 .env
 *.log
 npm-debug.log*
-
-# Database and local data
-data/*
-!data/.gitkeep
-*.db
-*.db-journal
-*.db-wal
-*.db-shm
