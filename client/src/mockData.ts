@@ -28,6 +28,7 @@ export const INITIAL_PROJECTS = [
     description: 'Kanban público de prueba',
     createdAt: new Date().toISOString(),
     created_at: new Date().toISOString(),
+    tasks: [],
   },
 ];
 
@@ -38,7 +39,7 @@ export const INITIAL_TASKS = [
     title: 'Probar mover esta tarjeta',
     description: 'Mueve las tareas entre las columnas',
     status: 'todo',
-    tags: {},
+    tags: { "1": 1 },
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     movedToResolvedAt: null,
