@@ -52,7 +52,7 @@ export const INITIAL_TASKS = [
     projectId: 1,
     title: 'Proyecto desplegado en Vercel',
     description: 'Modo cliente activo sin backend',
-    status: 'done',
+    status: 'resolved',
     tags: [],
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),

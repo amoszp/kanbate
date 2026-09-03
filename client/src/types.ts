@@ -1,4 +1,4 @@
-export type TaskStatus = 'backlog' | 'todo' | 'in_progress' | 'resolved' | 'done';
+export type TaskStatus = 'backlog' | 'todo' | 'in_progress' | 'resolved';
 
 export interface Tag {
   id: number;
@@ -6,15 +6,13 @@ export interface Tag {
   categoryName: string | null;
   name: string;
   color: string;
-  createdAt?: string;
-  created_at?: string;
+  createdAt: string;
 }
 
 export interface TagCategory {
   id: number;
   name: string;
-  createdAt?: string;
-  created_at?: string;
+  createdAt: string;
   tags: Tag[];
 }
 
@@ -29,13 +27,11 @@ export interface TagRef {
 export interface Project {
   id: number;
   name: string;
-  description?: string;
-  createdAt?: string;
-  created_at?: string;
-  updatedAt?: string;
-  updated_at?: string;
-  taskCounts?: Partial<Record<TaskStatus, number>>;
-  historyCount?: number;
+  description: string;
+  createdAt: string;
+  updatedAt: string;
+  taskCounts: Record<TaskStatus, number>;
+  historyCount: number;
 }
 
 export interface ProjectWithTasks extends Project {
@@ -46,28 +42,25 @@ export interface Task {
   id: number;
   projectId: number;
   title: string;
-  description?: string;
+  description: string;
   status: TaskStatus;
-  createdAt?: string;
-  created_at?: string;
-  updatedAt?: string;
-  updated_at?: string;
-  movedToResolvedAt?: string | null;
-  movedToInProgressAt?: string | null;
-  tags?: TagRef[] | Record<string, any>;
+  createdAt: string;
+  updatedAt: string;
+  movedToResolvedAt: string | null;
+  movedToInProgressAt: string | null;
+  tags: TagRef[];
 }
 
 export interface HistoryEntry {
   id: number;
   projectId: number;
   title: string;
-  description?: string;
+  description: string;
   status: TaskStatus;
-  createdAt?: string;
-  created_at?: string;
-  movedToResolvedAt?: string | null;
-  archivedAt?: string;
-  tags?: TagRef[] | Record<string, any>;
+  createdAt: string;
+  movedToResolvedAt: string | null;
+  archivedAt: string;
+  tags: TagRef[];
 }
 
 export interface AutomationResult {
@@ -75,25 +68,23 @@ export interface AutomationResult {
     id: number;
     projectId: number;
     title: string;
-    movedToResolvedAt?: string;
-    archivedAt?: string;
+    movedToResolvedAt: string;
+    archivedAt: string;
   }[];
   reminders: {
     id: number;
     projectId: number;
-    projectName?: string;
+    projectName: string;
     title: string;
-    movedToInProgressAt?: string;
-    hoursInProgress?: number;
+    movedToInProgressAt: string;
+    hoursInProgress: number;
   }[];
-  ranAt?: string;
+  ranAt: string;
 }
 
 export interface AutomationConfig {
   archiveAfterHours: number;
   remindAfterHours: number;
-  autoArchiveDays?: number;
-  reminderDays?: number;
 }
 
 export const COLUMNS: { key: TaskStatus; label: string; hint: string; color: string }[] = [
@@ -101,7 +92,6 @@ export const COLUMNS: { key: TaskStatus; label: string; hint: string; color: str
   { key: 'todo', label: 'To Do', hint: 'Ready to be worked on', color: '#ccff00' },
   { key: 'in_progress', label: 'In Progress', hint: 'Active tasks', color: '#ff2a6d' },
   { key: 'resolved', label: 'Resolved', hint: 'Completed tasks', color: '#00ff9f' },
-  { key: 'done', label: 'Done', hint: 'Finished tasks', color: '#00ff9f' },
 ];
 
 export const NEON_SWATCHES = [

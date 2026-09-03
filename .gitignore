@@ -1,20 +1,19 @@
-# Archivos internos y de sistema (Crítico)
+# Internal and system files (Critical)
 .git/
 .DS_Store
 
-# Dependencias
+# Dependencies
 node_modules/
 
-# Archivos compilados y de build
-dist/
+# Compiled and build dist files/
 *.tsbuildinfo
 
-# Archivos de entorno y logs
+# Environment files and logs
 .env
 *.log
 npm-debug.log*
 
-# Base de datos y datos locales
+# Database and local data
 data/*
 !data/.gitkeep
 *.db
