@@ -40,7 +40,7 @@ export function TaskCard({
       </button>
 
       <div className="mt-2 flex flex-wrap items-center gap-1.5">
-        {task.tags.map((ref) => (
+        {task.tags?.map((ref) => (
           <span
             key={ref.tagId}
             className="chip"

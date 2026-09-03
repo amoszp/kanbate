@@ -89,7 +89,7 @@ export function HistoryView({
                     <p className="mt-1 text-xs text-ink-muted line-clamp-2 break-words">{entry.description}</p>
                   )}
                   <div className="mt-2 flex flex-wrap gap-1.5">
-                    {entry.tags.map((ref) => (
+                    {entry.tags?.map((ref) => (
                       <span
                         key={ref.tagId}
                         className="chip"

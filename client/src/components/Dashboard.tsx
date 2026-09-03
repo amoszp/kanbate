@@ -73,16 +73,24 @@ export function Dashboard({
         </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {projects.map((p) => (
-            <ProjectCard
-              key={p.id}
-              project={p}
-              unread={unreadCount(p.tasks.filter((t) => t.status === 'backlog').map((t) => t.createdAt), getLastRead(p.id))}
-              onOpen={() => navigate(`/board/${p.id}`)}
-              onEdit={() => setProjectModal({ editing: p })}
-              onDelete={() => setDeleting(p)}
-            />
-          ))}
+          {projects.map((p) => {
+            const safeTasks = Array.isArray(p.tasks) ? p.tasks : [];
+            const backlogDates = safeTasks
+              .filter((t) => t.status === 'backlog')
+              .map((t) => t.createdAt || t.created_at || '')
+              .filter(Boolean);
+
+            return (
+              <ProjectCard
+                key={p.id}
+                project={p}
+                unread={unreadCount(backlogDates, getLastRead(p.id))}
+                onOpen={() => navigate(`/board/${p.id}`)}
+                onEdit={() => setProjectModal({ editing: p })}
+                onDelete={() => setDeleting(p)}
+              />
+            );
+          })}
         </div>
       )}
 
@@ -119,7 +127,17 @@ function ProjectCard({
   onEdit: () => void;
   onDelete: () => void;
 }) {
-  const total = Object.values(project.taskCounts).reduce((a, b) => a + b, 0);
+  const safeTasks = Array.isArray(project.tasks) ? project.tasks : [];
+  
+  // Calcula dinámicamente las tareas por estado directamente desde el array safeTasks
+  const countsByStatus = safeTasks.reduce((acc, task) => {
+    const status = task.status || 'todo';
+    acc[status] = (acc[status] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+
+  const total = safeTasks.length;
+  const historyCount = project.historyCount ?? 0;
 
   return (
     <div className="panel p-4 flex flex-col gap-3 hover:border-neon-cyan/40 transition-colors relative">
@@ -148,7 +166,7 @@ function ProjectCard({
               {c.label.replace(' ', '\u00A0')}
             </div>
             <div className="text-sm font-bold text-ink-primary">
-              {project.taskCounts[c.key]}
+              {countsByStatus[c.key] ?? project.taskCounts?.[c.key] ?? 0}
             </div>
           </div>
         ))}
@@ -156,7 +174,7 @@ function ProjectCard({
 
       <div className="flex items-center justify-between gap-2 text-[10px] text-ink-faint uppercase tracking-wider">
         <span>{total} task{total === 1 ? '' : 's'}</span>
-        <span>archive: {project.historyCount}</span>
+        <span>archive: {historyCount}</span>
       </div>
 
       <div className="flex gap-2">
