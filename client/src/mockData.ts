@@ -39,7 +39,9 @@ export const INITIAL_TASKS = [
     title: 'Probar mover esta tarjeta',
     description: 'Mueve las tareas entre las columnas',
     status: 'todo',
-    tags: { "1": 1 },
+    tags: [
+      { id: 2, categoryId: 1, categoryName: 'Priority', name: 'Medium', color: '#ffd700', createdAt: new Date().toISOString() }
+    ],
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     movedToResolvedAt: null,
@@ -51,7 +53,7 @@ export const INITIAL_TASKS = [
     title: 'Proyecto desplegado en Vercel',
     description: 'Modo cliente activo sin backend',
     status: 'done',
-    tags: {},
+    tags: [],
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     movedToResolvedAt: new Date().toISOString(),
