@@ -1,14 +1,16 @@
 import { Router } from 'express';
 import db from '../db.js';
 import { now } from '../seed.js';
-import { wrap } from '../middleware.js';
+import { wrap, httpError } from '../middleware.js';
 import { attachTaskTags, replaceTaskTags } from '../tagHelpers.js';
+import { addSystemNote, STATUS_LABELS } from '../commentHelpers.js';
 
 const router = Router();
 
 export const TASK_SELECT = `
   SELECT t.id, t.project_id, t.title, t.description, t.status,
-         t.created_at, t.updated_at, t.moved_to_resolved_at, t.moved_to_inprogress_at
+         t.created_at, t.updated_at, t.moved_to_resolved_at, t.moved_to_inprogress_at,
+         (SELECT COUNT(*) FROM comments c WHERE c.task_id = t.id AND c.kind = 'comment') AS comment_count
   FROM tasks t
 `;
 
@@ -22,6 +24,7 @@ export const mapTask = (r) => ({
   updatedAt: r.updated_at,
   movedToResolvedAt: r.moved_to_resolved_at,
   movedToInProgressAt: r.moved_to_inprogress_at,
+  commentCount: r.comment_count ?? 0,
   tags: [], // populated by attachTaskTags()
 });
 
@@ -173,8 +176,87 @@ router.put(
 
     if (body.tags !== undefined) validateAndReplaceTaskTags(existing.id, body.tags);
 
+    if (status !== existing.status) {
+      addSystemNote(db, existing.id, `Status: ${STATUS_LABELS[existing.status]} → ${STATUS_LABELS[status]}`, ts);
+    }
+
     const row = db.prepare(`${TASK_SELECT} WHERE t.id = ?`).get(existing.id);
     res.json(attachTaskTags(db, [mapTask(row)])[0]);
+  })
+);
+
+// POST /api/tasks/:id/transfer
+// Body: { mode: 'move' | 'copy', projectId?: number, newProject?: { name, description? } }
+// Moves or copies a task to another (optionally brand-new) project. A copy
+// carries over its tags and user comments; both leave an activity entry.
+router.post(
+  '/:id/transfer',
+  wrap((req, res) => {
+    const existing = db.prepare('SELECT * FROM tasks WHERE id = ?').get(req.params.id);
+    if (!existing) throw httpError(404, 'Task not found');
+
+    const body = req.body ?? {};
+    const mode = body.mode;
+    if (mode !== 'move' && mode !== 'copy') throw httpError(400, "mode must be 'move' or 'copy'");
+
+    const newProjectName = body.newProject ? String(body.newProject.name ?? '').trim() : '';
+    if (body.newProject && !newProjectName) throw httpError(400, 'New project name is required');
+
+    const source = db.prepare('SELECT id, name FROM projects WHERE id = ?').get(existing.project_id);
+    const ts = now();
+
+    const tx = db.transaction(() => {
+      let target;
+      if (newProjectName) {
+        const info = db
+          .prepare('INSERT INTO projects (name, description, created_at, updated_at) VALUES (?, ?, ?, ?)')
+          .run(newProjectName, String(body.newProject.description ?? '').trim(), ts, ts);
+        target = { id: Number(info.lastInsertRowid), name: newProjectName };
+      } else {
+        target = db.prepare('SELECT id, name FROM projects WHERE id = ?').get(body.projectId);
+        if (!target) throw httpError(404, 'Target project not found');
+      }
+
+      if (mode === 'move') {
+        if (target.id === existing.project_id) throw httpError(400, 'Task is already in that project');
+        db.prepare('UPDATE tasks SET project_id = ?, updated_at = ? WHERE id = ?').run(target.id, ts, existing.id);
+        addSystemNote(db, existing.id, `Moved from «${source?.name ?? '?'}» to «${target.name}»`, ts);
+        return { taskId: existing.id, projectId: target.id };
+      }
+
+      // Copy: a fresh task in the same column, with its own status clock.
+      const params = applyStatusTimestamps({ status: existing.status }, { status: existing.status, updatedAt: ts });
+      const info = db
+        .prepare(
+          `INSERT INTO tasks
+            (project_id, title, description, status, created_at, updated_at,
+             moved_to_resolved_at, moved_to_inprogress_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+        )
+        .run(
+          target.id, existing.title, existing.description, existing.status, ts, ts,
+          params.movedToResolvedAt, params.movedToInProgressAt
+        );
+      const copyId = Number(info.lastInsertRowid);
+      db.prepare('INSERT INTO task_tags (task_id, tag_id) SELECT ?, tag_id FROM task_tags WHERE task_id = ?').run(
+        copyId, existing.id
+      );
+      db.prepare(
+        `INSERT INTO comments (task_id, kind, body, created_at)
+         SELECT ?, kind, body, created_at FROM comments WHERE task_id = ? AND kind = 'comment' ORDER BY id`
+      ).run(copyId, existing.id);
+      addSystemNote(db, copyId, `Copied from #${existing.id} in «${source?.name ?? '?'}»`, ts);
+      addSystemNote(db, existing.id, `Copied to «${target.name}» as #${copyId}`, ts);
+      return { taskId: copyId, projectId: target.id };
+    });
+
+    const result = tx();
+    const row = db.prepare(`${TASK_SELECT} WHERE t.id = ?`).get(result.taskId);
+    res.status(mode === 'copy' ? 201 : 200).json({
+      mode,
+      projectId: result.projectId,
+      task: attachTaskTags(db, [mapTask(row)])[0],
+    });
   })
 );
 

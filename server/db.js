@@ -111,6 +111,28 @@ function createTagSchema(db) {
 }
 
 /**
+ * Task comments / activity stream. A comment belongs to either a live task or
+ * an archived history entry (exactly one of task_id / history_id is set); the
+ * automation engine re-points comments to the history row when archiving.
+ * kind: 'comment' (user-written) | 'system' (auto-logged activity).
+ */
+function createCommentSchema(db) {
+  db.exec(`
+  CREATE TABLE IF NOT EXISTS comments (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    task_id    INTEGER REFERENCES tasks(id) ON DELETE CASCADE,
+    history_id INTEGER REFERENCES history(id) ON DELETE CASCADE,
+    kind       TEXT NOT NULL DEFAULT 'comment',
+    body       TEXT NOT NULL,
+    created_at TEXT NOT NULL
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_comments_task    ON comments(task_id);
+  CREATE INDEX IF NOT EXISTS idx_comments_history ON comments(history_id);
+  `);
+}
+
+/**
  * Migrates a v1 database into the v2 tag model:
  *  - tags.type ('priority' | 'ai_tool') -> tag_categories rows
  *  - tags rebuilt to reference category_id
@@ -171,6 +193,7 @@ function initSchema(db) {
     createCoreTables(db);
     createTagSchema(db);
     createTagIndexes(db);
+    createCommentSchema(db);
     seedDefaults(db);
     return;
   }
@@ -187,6 +210,7 @@ function initSchema(db) {
     db.pragma('foreign_keys = ON');
   }
   createTagIndexes(db);
+  createCommentSchema(db);
   db.pragma('user_version = 2');
   seedDefaults(db);
 }

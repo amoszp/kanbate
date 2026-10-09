@@ -8,8 +8,11 @@ const router = Router();
 export const HISTORY_SELECT = `
   SELECT
     h.id, h.project_id, h.title, h.description, h.status,
-    h.created_at, h.moved_to_resolved_at, h.archived_at
+    h.created_at, h.moved_to_resolved_at, h.archived_at,
+    p.name AS project_name,
+    (SELECT COUNT(*) FROM comments c WHERE c.history_id = h.id AND c.kind = 'comment') AS comment_count
   FROM history h
+  LEFT JOIN projects p ON p.id = h.project_id
 `;
 
 const mapHistory = (r) => ({
@@ -21,8 +24,19 @@ const mapHistory = (r) => ({
   createdAt: r.created_at,
   movedToResolvedAt: r.moved_to_resolved_at,
   archivedAt: r.archived_at,
+  projectName: r.project_name,
+  commentCount: r.comment_count ?? 0,
   tags: [], // populated by attachHistoryTags()
 });
+
+// GET /api/history  — every archived task across all projects (powers Find)
+router.get(
+  '/',
+  wrap((req, res) => {
+    const rows = db.prepare(`${HISTORY_SELECT} ORDER BY h.archived_at DESC`).all();
+    res.json(attachHistoryTags(db, rows.map(mapHistory)));
+  })
+);
 
 // GET /api/projects/:projectId/history
 router.get(

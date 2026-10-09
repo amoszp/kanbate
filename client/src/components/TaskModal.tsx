@@ -1,17 +1,26 @@
 import { useEffect, useState } from 'react';
 import { useToast } from '../toast';
-import { COLUMNS, type TagCategory, type Task } from '../types';
+import { COLUMNS, type Project, type TagCategory, type Task, type TransferResult } from '../types';
 import { formatDateTime } from '../utils';
+import { CommentsPanel } from './CommentsPanel';
+import { TransferDialog } from './TransferDialog';
 
 export function TaskModal({
   task,
   categories,
+  projects,
   onSave,
   onDelete,
   onCancel,
+  onTransferred,
+  onCommentsChanged,
 }: {
   task: Task;
   categories: TagCategory[];
+  /** Enables the Move / Copy action when provided. */
+  projects?: Project[];
+  onTransferred?: (result: TransferResult) => Promise<void> | void;
+  onCommentsChanged?: () => void;
   onSave: (payload: {
     title: string;
     description: string;
@@ -32,7 +41,21 @@ export function TaskModal({
   });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [transferring, setTransferring] = useState(false);
   const { push } = useToast();
+  const isNew = task.id === 0;
+  const projectName = projects?.find((p) => p.id === task.projectId)?.name;
+
+  const finishTransfer = async (result: TransferResult, targetName: string) => {
+    push({
+      kind: 'success',
+      title: result.mode === 'move' ? 'Task moved' : 'Task copied',
+      message: `«${result.task.title}» → ${targetName}`,
+    });
+    setTransferring(false);
+    onCancel();
+    await onTransferred?.(result);
+  };
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -80,8 +103,9 @@ export function TaskModal({
   };
 
   return (
+    <>
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 overflow-y-auto"
+      className="fixed inset-0 z-50 flex items-start justify-center bg-black/70 backdrop-blur-sm p-4 overflow-y-auto"
       onClick={onCancel}
     >
       <form
@@ -90,10 +114,15 @@ export function TaskModal({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between gap-2">
-          <p className="text-[11px] uppercase tracking-[0.2em] text-neon-cyan font-bold">Edit task</p>
-          <span className="chip border border-edge text-ink-muted">
-            id #{task.id} · created {formatDateTime(task.createdAt)}
-          </span>
+          <p className="text-[11px] uppercase tracking-[0.2em] text-neon-cyan font-bold">
+            {isNew ? 'New task' : 'Edit task'}
+            {projectName && <span className="text-ink-muted font-normal"> · {projectName}</span>}
+          </p>
+          {!isNew && (
+            <span className="chip border border-edge text-ink-muted">
+              id #{task.id} · created {formatDateTime(task.createdAt)}
+            </span>
+          )}
         </div>
 
         <div className="mt-4">
@@ -165,9 +194,18 @@ export function TaskModal({
         {error && <p className="mt-3 text-xs text-neon-magenta">{error}</p>}
 
         <div className="mt-5 flex flex-wrap justify-between gap-2">
-          <button type="button" className="btn btn-magenta" onClick={() => void remove()}>
-            Delete
-          </button>
+          <div className="flex gap-2">
+            {!isNew && (
+              <button type="button" className="btn btn-magenta" onClick={() => void remove()}>
+                Delete
+              </button>
+            )}
+            {!isNew && projects && (
+              <button type="button" className="btn btn-cyan" onClick={() => setTransferring(true)}>
+                ⇄ Move / Copy
+              </button>
+            )}
+          </div>
           <div className="flex gap-2">
             <button type="button" className="btn btn-ghost" onClick={onCancel}>
               Cancel
@@ -177,7 +215,21 @@ export function TaskModal({
             </button>
           </div>
         </div>
+
+        {!isNew && <CommentsPanel target={{ type: 'task', id: task.id }} onChanged={onCommentsChanged} />}
       </form>
     </div>
+
+    {/* Sibling of the overlay (not a child) so its backdrop clicks don't
+        bubble up and close the task modal too. */}
+    {transferring && projects && (
+      <TransferDialog
+        task={task}
+        projects={projects}
+        onDone={finishTransfer}
+        onCancel={() => setTransferring(false)}
+      />
+    )}
+    </>
   );
 }

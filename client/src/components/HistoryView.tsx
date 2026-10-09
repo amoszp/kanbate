@@ -4,6 +4,7 @@ import { useToast } from '../toast';
 import type { HistoryEntry, ProjectWithTasks } from '../types';
 import { formatDateTime } from '../utils';
 import { ConfirmDialog } from './ConfirmDialog';
+import { ArchivedEntryModal } from './ArchivedEntryModal';
 import type { Route } from '../hooks/useHashRoute';
 
 export function HistoryView({
@@ -22,6 +23,7 @@ export function HistoryView({
   const [entries, setEntries] = useState<HistoryEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState<HistoryEntry | null>(null);
+  const [viewing, setViewing] = useState<HistoryEntry | null>(null);
 
   useEffect(() => {
     setLoading(true);
@@ -83,8 +85,13 @@ export function HistoryView({
           {entries.map((entry) => (
             <article key={entry.id} className="panel p-4">
               <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <h3 className="text-sm text-ink-primary break-words">{entry.title}</h3>
+                <button className="min-w-0 text-left flex-1" onClick={() => setViewing(entry)}>
+                  <h3 className="text-sm text-ink-primary break-words hover:text-neon-cyan transition-colors">
+                    {entry.title}
+                    {entry.commentCount > 0 && (
+                      <span className="ml-2 text-[10px] text-neon-cyan/80">💬 {entry.commentCount}</span>
+                    )}
+                  </h3>
                   {entry.description && (
                     <p className="mt-1 text-xs text-ink-muted line-clamp-2 break-words">{entry.description}</p>
                   )}
@@ -104,7 +111,7 @@ export function HistoryView({
                   <p className="mt-2 text-[10px] uppercase tracking-wider text-ink-faint">
                     resolved {formatDateTime(entry.movedToResolvedAt)} · archived {formatDateTime(entry.archivedAt)}
                   </p>
-                </div>
+                </button>
                 <button
                   className="btn btn-magenta shrink-0 !px-2 !py-1"
                   onClick={() => setDeleting(entry)}
@@ -116,6 +123,14 @@ export function HistoryView({
             </article>
           ))}
         </div>
+      )}
+
+      {viewing && (
+        <ArchivedEntryModal
+          entry={viewing}
+          onClose={() => setViewing(null)}
+          onCommentsChanged={() => void api.getHistory(projectId).then(setEntries)}
+        />
       )}
 
       {deleting && (

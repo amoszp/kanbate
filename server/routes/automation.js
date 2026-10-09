@@ -45,6 +45,9 @@ router.post(
       const insertLinks = db.prepare(
         'INSERT INTO history_tags (history_id, tag_id) SELECT ?, tag_id FROM task_tags WHERE task_id = ?'
       );
+      // Comments follow the task into the archive (must run before the task
+      // row is deleted, otherwise ON DELETE CASCADE would drop them).
+      const moveComments = db.prepare('UPDATE comments SET history_id = ?, task_id = NULL WHERE task_id = ?');
       const removeTaskLinks = db.prepare('DELETE FROM task_tags WHERE task_id = ?');
       const remove = db.prepare('DELETE FROM tasks WHERE id = ?');
 
@@ -55,6 +58,7 @@ router.post(
             t.created_at, t.moved_to_resolved_at, ts
           );
           insertLinks.run(info.lastInsertRowid, t.id);
+          moveComments.run(info.lastInsertRowid, t.id);
           removeTaskLinks.run(t.id);
           remove.run(t.id);
         }

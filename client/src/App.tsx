@@ -9,6 +9,7 @@ import { Dashboard } from './components/Dashboard';
 import { Board } from './components/Board';
 import { SettingsView } from './components/SettingsView';
 import { HistoryView } from './components/HistoryView';
+import { FindView } from './components/FindView';
 
 export default function App() {
   return (
@@ -89,6 +90,10 @@ function AppShell() {
             navigate={navigate}
             refresh={refresh}
           />
+        )}
+
+        {route.path === 'find' && (
+          <FindView projects={projects} categories={categories} navigate={navigate} refresh={refresh} />
         )}
 
         {route.path === 'settings' && (

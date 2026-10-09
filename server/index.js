@@ -9,6 +9,7 @@ import categoriesRouter from './routes/categories.js';
 import historyRouter from './routes/history.js';
 import automationRouter from './routes/automation.js';
 import dashboardRouter from './routes/dashboard.js';
+import commentsRouter from './routes/comments.js';
 import { errorHandler } from './middleware.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -26,6 +27,7 @@ app.use('/api/categories', categoriesRouter);
 app.use('/api/history', historyRouter);
 app.use('/api/automation', automationRouter);
 app.use('/api/dashboard', dashboardRouter);
+app.use('/api/comments', commentsRouter);
 app.use('/api', (req, res) => res.status(404).json({ error: 'Unknown API route' }));
 
 // Central error handler (must come after all routes)

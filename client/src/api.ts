@@ -1,6 +1,8 @@
 import type {
   AutomationConfig,
   AutomationResult,
+  Comment,
+  CommentTarget,
   HistoryEntry,
   Project,
   ProjectWithTasks,
@@ -8,6 +10,7 @@ import type {
   TagCategory,
   Task,
   TaskStatus,
+  TransferResult,
 } from './types';
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
@@ -40,6 +43,12 @@ export interface TaskPayload {
   tags?: Record<number, number | null>;
 }
 
+export interface TransferPayload {
+  mode: 'move' | 'copy';
+  projectId?: number;
+  newProject?: { name: string; description?: string };
+}
+
 export interface TagPayload {
   categoryId: number;
   name: string;
@@ -60,6 +69,13 @@ export const api = {
   updateTask: (id: number, payload: TaskPayload) =>
     request<Task>(`/api/tasks/${id}`, { method: 'PUT', body: JSON.stringify(payload) }),
   deleteTask: (id: number) => request<{ ok: boolean }>(`/api/tasks/${id}`, { method: 'DELETE' }),
+  transferTask: (id: number, payload: TransferPayload) =>
+    request<TransferResult>(`/api/tasks/${id}/transfer`, { method: 'POST', body: JSON.stringify(payload) }),
+
+  getComments: (target: CommentTarget) => request<Comment[]>(`/api/comments/${target.type}/${target.id}`),
+  addComment: (target: CommentTarget, body: string) =>
+    request<Comment>(`/api/comments/${target.type}/${target.id}`, { method: 'POST', body: JSON.stringify({ body }) }),
+  deleteComment: (id: number) => request<{ ok: boolean }>(`/api/comments/${id}`, { method: 'DELETE' }),
 
   getCategories: () => request<TagCategory[]>('/api/categories'),
   createCategory: (name: string) =>
@@ -76,6 +92,7 @@ export const api = {
     request<Tag>(`/api/tags/${id}`, { method: 'PUT', body: JSON.stringify(payload) }),
   deleteTag: (id: number) => request<{ ok: boolean }>(`/api/tags/${id}`, { method: 'DELETE' }),
 
+  getAllHistory: () => request<HistoryEntry[]>('/api/history'),
   getHistory: (projectId: number) => request<HistoryEntry[]>(`/api/history/project/${projectId}`),
   deleteHistoryEntry: (id: number) => request<{ ok: boolean }>(`/api/history/${id}`, { method: 'DELETE' }),
 

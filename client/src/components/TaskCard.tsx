@@ -59,6 +59,11 @@ export function TaskCard({
             ⋮⋮
           </span>
           <span className="text-[9px] text-ink-faint truncate">#{task.id}</span>
+          {task.commentCount > 0 && (
+            <span className="text-[9px] text-neon-cyan/80" title={`${task.commentCount} comment${task.commentCount === 1 ? '' : 's'}`}>
+              💬 {task.commentCount}
+            </span>
+          )}
         </div>
         <div className="flex items-center gap-1.5">
           <span className="text-[9px] uppercase tracking-wider text-ink-faint">Move to</span>

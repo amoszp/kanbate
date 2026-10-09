@@ -120,7 +120,7 @@ export function Board({
               ← dashboard
             </button>
             <span className="text-[11px] text-ink-faint">/</span>
-            <span className="text-[11px] uppercase tracking-widest text-neon-magenta">history archive</span>
+            <span className="text-[11px] uppercase tracking-widest text-neon-magenta">board</span>
           </div>
           <h1 className="glitch-title text-2xl sm:text-3xl truncate">{project.name}</h1>
           <p className="text-xs text-ink-muted mt-1">{project.description || '—'}</p>
@@ -215,10 +215,14 @@ export function Board({
               updatedAt: '',
               movedToResolvedAt: null,
               movedToInProgressAt: null,
+              commentCount: 0,
               tags: [],
             } as Task)
           }
           categories={categories}
+          projects={projects}
+          onTransferred={refresh}
+          onCommentsChanged={() => void refresh()}
           onSave={saveTask}
           onDelete={deleteTask}
           onCancel={() => {

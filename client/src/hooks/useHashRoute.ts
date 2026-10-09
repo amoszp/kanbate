@@ -11,6 +11,7 @@ function parseHash(): Route {
   if (path === 'board' && id) return { path: 'board', projectId: Number(id) };
   if (path === 'history' && id) return { path: 'history', projectId: Number(id) };
   if (path === 'settings') return { path: 'settings', projectId: null };
+  if (path === 'find') return { path: 'find', projectId: null };
   return { path: '/', projectId: null };
 }
 
@@ -28,8 +29,8 @@ export function useHashRoute(): [Route, (route: Route | string) => void] {
       window.location.hash = next;
     } else if (next.path === '/') {
       window.location.hash = '/';
-    } else if (next.path === 'settings') {
-      window.location.hash = '/settings';
+    } else if (next.path === 'settings' || next.path === 'find') {
+      window.location.hash = `/${next.path}`;
     } else if (next.projectId != null) {
       window.location.hash = `/${next.path}/${next.projectId}`;
     }

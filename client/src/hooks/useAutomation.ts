@@ -21,6 +21,9 @@ export function useAutomation(navigate: (route: Route | string) => void, refresh
 
   const lastRunRef = useRef(0);
   const runningRef = useRef(false);
+  // Reminders already surfaced this session — prevents the same warning from
+  // stacking up again on every focus/visibility run.
+  const shownRef = useRef(new Set<number>());
 
   const run = useCallback(
     async (reason: string) => {
@@ -43,20 +46,41 @@ export function useAutomation(navigate: (route: Route | string) => void, refresh
           });
         }
 
+        const activeIds = new Set(result.reminders.map((r) => r.id));
+        for (const id of shownRef.current) if (!activeIds.has(id)) shownRef.current.delete(id);
+
         if (result.reminders.length > 0) {
           // Purge dismissals for tasks that are no longer in progress.
           purge(result.reminders.map((r) => r.id));
 
           for (const reminder of result.reminders) {
             if (dismissedRef.current.includes(reminder.id)) continue;
+            if (shownRef.current.has(reminder.id)) continue;
+            shownRef.current.add(reminder.id);
             const hours = hoursSince(reminder.movedToInProgressAt);
-            push({
+            // Both actions must also close the toast itself — previously they
+            // only navigated / persisted the dismissal and the toast stayed up.
+            const toastId = push({
               kind: 'reminder',
               title: reminder.title,
               message: `${reminder.projectName} · In Progress for ${hours != null ? Math.floor(hours) : reminder.hoursInProgress}h+. Continue working or move to Resolved.`,
               actions: [
-                { label: 'Open', tone: 'cyan', onClick: () => navigate(`/board/${reminder.projectId}`) },
-                { label: 'Dismiss', tone: 'magenta', onClick: () => dismissReminder(reminder.id) },
+                {
+                  label: 'Open',
+                  tone: 'cyan',
+                  onClick: () => {
+                    dismiss(toastId);
+                    navigate(`/board/${reminder.projectId}`);
+                  },
+                },
+                {
+                  label: 'Dismiss',
+                  tone: 'magenta',
+                  onClick: () => {
+                    dismissReminder(reminder.id);
+                    dismiss(toastId);
+                  },
+                },
               ],
             });
           }

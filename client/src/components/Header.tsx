@@ -50,7 +50,7 @@ export function Header({
               KANBATE
             </span>
             <span className="block text-[9px] uppercase tracking-[0.35em] text-neon-cyan/80">
-              {route.path === '/' ? '// dashboard' : route.path === 'settings' ? '// settings' : route.path === 'history' ? '// history archive' : '// board'}
+              {route.path === '/' ? '// dashboard' : route.path === 'settings' ? '// settings' : route.path === 'find' ? '// find' : route.path === 'history' ? '// history archive' : '// board'}
             </span>
           </div>
         </button>
@@ -66,6 +66,13 @@ export function Header({
             className={`btn ${route.path === '/' ? 'btn-cyan' : 'btn-ghost'}`}
           >
             Dashboard
+          </button>
+          <button
+            onClick={() => navigate('/find')}
+            className={`btn ${route.path === 'find' ? 'btn-cyan' : 'btn-ghost'}`}
+            aria-label="Find tasks"
+          >
+            ⌕<span className="hidden sm:inline">Find</span>
           </button>
           <button
             onClick={() => navigate('/settings')}

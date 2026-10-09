@@ -48,19 +48,39 @@ export interface Task {
   updatedAt: string;
   movedToResolvedAt: string | null;
   movedToInProgressAt: string | null;
+  commentCount: number;
   tags: TagRef[];
 }
 
 export interface HistoryEntry {
   id: number;
   projectId: number;
+  projectName: string | null;
   title: string;
   description: string;
   status: TaskStatus;
   createdAt: string;
   movedToResolvedAt: string | null;
   archivedAt: string;
+  commentCount: number;
   tags: TagRef[];
+}
+
+export interface Comment {
+  id: number;
+  taskId: number | null;
+  historyId: number | null;
+  kind: 'comment' | 'system';
+  body: string;
+  createdAt: string;
+}
+
+export type CommentTarget = { type: 'task' | 'history'; id: number };
+
+export interface TransferResult {
+  mode: 'move' | 'copy';
+  projectId: number;
+  task: Task;
 }
 
 export interface AutomationResult {
