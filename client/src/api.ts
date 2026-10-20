@@ -13,11 +13,31 @@ import type {
   TransferResult,
 } from './types';
 
+/** Fired when the server says the session is gone, so the app shows the sign-in screen. */
+export const SIGNED_OUT_EVENT = 'kanbate:signed-out';
+
+export interface SessionUser {
+  id: number;
+  username: string;
+  displayName: string;
+  isAdmin: boolean;
+}
+
+/** `user` is null on the home network, where no sign-in is needed. */
+export interface Session {
+  user: SessionUser | null;
+  local: boolean;
+}
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(path, {
     headers: { 'Content-Type': 'application/json' },
+    credentials: 'same-origin',
     ...init,
   });
+  if (res.status === 401 && !path.startsWith('/api/auth/')) {
+    window.dispatchEvent(new Event(SIGNED_OUT_EVENT));
+  }
   if (!res.ok) {
     let message = `Request failed (${res.status})`;
     try {
@@ -56,6 +76,12 @@ export interface TagPayload {
 }
 
 export const api = {
+  me: () => request<Session>('/api/auth/me'),
+  login: (username: string, password: string) =>
+    request<{ user: SessionUser }>('/api/auth/login', { method: 'POST', body: JSON.stringify({ username, password }) }),
+  logout: () =>
+    fetch('/api/auth/logout', { method: 'POST', credentials: 'same-origin' }).then(() => undefined),
+
   getDashboard: () => request<ProjectWithTasks[]>('/api/dashboard'),
 
   createProject: (payload: ProjectPayload) =>

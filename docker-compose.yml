@@ -11,6 +11,14 @@ services:
       - "${KANBATE_PORT:-3000}:3000"
     environment:
       - TZ=${TZ:-Europe/Berlin}
+      # Sign-in for requests that come from the internet (see server/auth.js).
+      # The token lives in .env next to this file, never in the repo.
+      - ACCOUNTS_URL=${ACCOUNTS_URL:-http://accounts:4600}
+      - ACCOUNTS_SERVICE_TOKEN=${ACCOUNTS_SERVICE_TOKEN:?set ACCOUNTS_SERVICE_TOKEN in .env}
+      - COOKIE_SECURE=${COOKIE_SECURE:-true}
+    networks:
+      - default
+      - accounts
     volumes:
       # SQLite database lives in ./data/kanbate.db on the host -> survives container updates.
       - ./data:/data
@@ -22,3 +30,8 @@ services:
       start_period: 10s
     # Optional: keep memory usage bounded
     mem_limit: 512m
+
+networks:
+  accounts:
+    # Created by the accounts service's compose file.
+    external: true

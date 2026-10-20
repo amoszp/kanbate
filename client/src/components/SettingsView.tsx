@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { api } from '../api';
+import { api, type Session } from '../api';
 import { useToast } from '../toast';
 import type { AutomationConfig, TagCategory } from '../types';
 import { TagManager } from './TagManager';
@@ -9,9 +9,13 @@ import { ConfirmDialog } from './ConfirmDialog';
 export function SettingsView({
   categories,
   refresh,
+  session,
+  onSignOut,
 }: {
   categories: TagCategory[];
   refresh: () => Promise<void>;
+  session: Session;
+  onSignOut: () => Promise<void>;
 }) {
   const { push } = useToast();
   const [config, setConfig] = useState<AutomationConfig | null>(null);
@@ -55,6 +59,20 @@ export function SettingsView({
           tag blocks · automation rules · local data
         </p>
       </div>
+
+      {session.user && (
+        <section className="panel p-4 flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 className="text-sm font-bold uppercase tracking-widest text-neon-cyan">Account</h2>
+            <p className="text-xs text-ink-muted mt-1">
+              Signed in as <span className="text-ink-primary">{session.user.displayName || session.user.username}</span>
+            </p>
+          </div>
+          <button className="btn btn-magenta" onClick={() => void onSignOut()}>
+            Sign out
+          </button>
+        </section>
+      )}
 
       <section className="panel p-4">
         <header className="flex items-center justify-between gap-2">

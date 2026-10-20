@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { ToastProvider } from './toast';
-import { api } from './api';
+import { api, SIGNED_OUT_EVENT, type Session } from './api';
+import { LoginView } from './components/LoginView';
 import type { TagCategory, ProjectWithTasks } from './types';
 import { useHashRoute } from './hooks/useHashRoute';
 import { useAutomation } from './hooks/useAutomation';
@@ -14,12 +15,67 @@ import { FindView } from './components/FindView';
 export default function App() {
   return (
     <ToastProvider>
-      <AppShell />
+      <SessionGate />
     </ToastProvider>
   );
 }
 
-function AppShell() {
+/**
+ * From the internet Kanbate needs a signed-in admin; on the home network the
+ * server lets requests through and `me` answers with no user.
+ */
+function SessionGate() {
+  // undefined = still checking, null = needs to sign in
+  const [session, setSession] = useState<Session | null | undefined>(undefined);
+  const [offline, setOffline] = useState(false);
+
+  const check = useCallback(async () => {
+    try {
+      setSession(await api.me());
+      setOffline(false);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : '';
+      if (msg === 'login required' || msg === 'this account cannot use Kanbate') setSession(null);
+      else setOffline(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    void check();
+    const onSignedOut = () => setSession(null);
+    window.addEventListener(SIGNED_OUT_EVENT, onSignedOut);
+    return () => window.removeEventListener(SIGNED_OUT_EVENT, onSignedOut);
+  }, [check]);
+
+  if (session === null) return <LoginView onSignedIn={() => void check()} />;
+  if (session === undefined) {
+    return (
+      <div className="min-h-[100dvh] flex items-center justify-center text-xs uppercase tracking-[0.2em] text-ink-muted">
+        {offline ? (
+          <span>
+            Kanbate is unreachable.{' '}
+            <button className="text-neon-cyan underline" onClick={() => void check()}>
+              Retry
+            </button>
+          </span>
+        ) : (
+          'Loading…'
+        )}
+      </div>
+    );
+  }
+  return (
+    <AppShell
+      session={session}
+      onSignOut={async () => {
+        await api.logout();
+        setSession(null);
+      }}
+    />
+  );
+}
+
+function AppShell({ session, onSignOut }: { session: Session; onSignOut: () => Promise<void> }) {
   const [route, navigate] = useHashRoute();
   const [projects, setProjects] = useState<ProjectWithTasks[]>([]);
   const [categories, setCategories] = useState<TagCategory[]>([]);
@@ -97,7 +153,7 @@ function AppShell() {
         )}
 
         {route.path === 'settings' && (
-          <SettingsView categories={categories} refresh={refresh} />
+          <SettingsView categories={categories} refresh={refresh} session={session} onSignOut={onSignOut} />
         )}
       </main>
       <footer className="text-center text-[10px] uppercase tracking-[0.3em] text-ink-faint py-5">

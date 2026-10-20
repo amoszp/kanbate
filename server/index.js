@@ -10,16 +10,22 @@ import historyRouter from './routes/history.js';
 import automationRouter from './routes/automation.js';
 import dashboardRouter from './routes/dashboard.js';
 import commentsRouter from './routes/comments.js';
+import authRouter from './routes/auth.js';
 import { errorHandler } from './middleware.js';
+import { requireUser } from './auth.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PORT = Number(process.env.PORT || 3000);
 const app = express();
 
+app.disable('x-powered-by');
 app.use(express.json({ limit: '1mb' }));
 
 // --- API routes ----------------------------------------------------------
 app.get('/api/health', (req, res) => res.json({ ok: true, service: 'kanbate', time: new Date().toISOString() }));
+app.use('/api/auth', authRouter);
+// Everything below needs a signed-in admin, unless the request is from the home network.
+app.use('/api', requireUser());
 app.use('/api/projects', projectsRouter);
 app.use('/api/tasks', tasksRouter);
 app.use('/api/tags', tagsRouter);

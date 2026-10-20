@@ -88,9 +88,25 @@ mkdir -p /srv/kanbate/data
 cd /srv/kanbate
 echo 'KANBATE_PORT=3000' > .env     # 3000 by default; OMV UI owns port 80
 echo 'TZ=Europe/Berlin' >> .env     # your timezone
+echo 'ACCOUNTS_SERVICE_TOKEN=...' >> .env   # the accounts service's token (see "Sign-in" below)
 ```
 
 > The `./data` directory **is** your database host folder. Compose will map `./data` into the container at `/data`.
+
+### Sign-in
+
+Kanbate signs people in through a separate **accounts service** (users, sessions, rate limits), reached over a
+private Docker network called `accounts`. That service must already be running on the same host, and its
+service token goes in `.env` as `ACCOUNTS_SERVICE_TOKEN` (`docker compose` refuses to start without it).
+
+- **From the internet** (through a Cloudflare Tunnel, so every request carries `CF-Connecting-IP`): the app shows
+  a sign-in screen, and only **admin** accounts get in. Sessions last 180 days (HttpOnly cookie).
+- **From the local network** (a private address, no Cloudflare header): no sign-in, exactly as before, so scripts
+  and tools on the LAN keep using the API directly.
+- Only reach Kanbate from outside through the tunnel. Forwarding its port on the router would make outside
+  traffic look local.
+- For local development without the accounts service, requests from `localhost` are already treated as local;
+  `AUTH_REQUIRED=false` turns the check off entirely.
 
 ### 4. Copy the `docker-compose.yml` to the NAS
 
@@ -117,6 +133,12 @@ services:
       - "${KANBATE_PORT:-3000}:3000"   # host port 3000 -> container 3000
     environment:
       - TZ=${TZ:-Europe/Berlin}
+      - ACCOUNTS_URL=${ACCOUNTS_URL:-http://accounts:4600}
+      - ACCOUNTS_SERVICE_TOKEN=${ACCOUNTS_SERVICE_TOKEN:?set ACCOUNTS_SERVICE_TOKEN in .env}
+      - COOKIE_SECURE=${COOKIE_SECURE:-true}
+    networks:
+      - default
+      - accounts                        # the accounts service's network (see "Sign-in")
     volumes:
       - ./data:/data                    # <-- host folder = the hosted SQLite database
     healthcheck:
@@ -125,6 +147,10 @@ services:
       timeout: 3s
       retries: 3
       start_period: 10s
+
+networks:
+  accounts:
+    external: true
 ```
 
 ### 5. Start it
