@@ -7,12 +7,25 @@
     -webkit-tap-highlight-color: transparent;
     -webkit-text-size-adjust: 100%;
     scrollbar-color: #2a3350 #0d0f18;
+    /* No double-tap zoom; panning (vertical + horizontal scroll) still works. */
+    touch-action: manipulation;
   }
 
   body {
     @apply bg-backdrop text-ink-primary font-mono antialiased;
     min-height: 100dvh;
     overflow-x: hidden;
+    touch-action: manipulation;
+  }
+
+  a,
+  button,
+  input,
+  select,
+  textarea,
+  label,
+  [role='button'] {
+    touch-action: manipulation;
   }
 
   /* Cyberpunk backdrop: subtle grid + vignette + scanlines */
@@ -37,39 +50,137 @@
   button {
     font-family: inherit;
   }
+
+  /* One focus ring for every interactive element (keyboard focus only). */
+  :focus-visible {
+    outline: 2px solid #00f0ff;
+    outline-offset: 2px;
+  }
+
+  /* iOS zooms the page when a focused field's font is under 16px.
+     On touch devices every form field renders at 16px, whatever its class. */
+  @media (pointer: coarse) {
+    input,
+    select,
+    textarea {
+      font-size: 16px !important;
+    }
+  }
 }
 
 @layer components {
+  /* ---- Surfaces ---------------------------------------------------------- */
   .panel {
-    @apply bg-panel border border-edge rounded-lg shadow-panel;
+    @apply bg-panel border border-edge rounded-panel shadow-card;
+  }
+  /* Clickable panel (cards, result rows). */
+  .panel-link {
+    @apply transition-colors duration-150 hover:border-neon-cyan/50;
+  }
+  /* Recessed surface inside a panel (count tiles, list rows, comments). */
+  .inset {
+    @apply rounded-control border border-edge bg-backdrop;
   }
 
+  /* ---- Modals ------------------------------------------------------------ */
+  .modal-overlay {
+    @apply fixed inset-0 z-50 overflow-y-auto bg-black/70 backdrop-blur-sm;
+  }
+  .modal {
+    @apply panel w-full p-5 animate-slide-in border-2 border-neon-cyan/40;
+  }
+  .modal-danger {
+    @apply border-neon-magenta/40;
+  }
+
+  /* ---- Typography -------------------------------------------------------- */
+  .page-title {
+    @apply glitch-title text-2xl sm:text-3xl;
+  }
+  .page-subtitle {
+    @apply mt-1 text-xs uppercase tracking-label text-ink-muted;
+  }
+  .section-title {
+    @apply text-sm font-bold uppercase tracking-label text-neon-cyan;
+  }
+  .eyebrow {
+    @apply text-eyebrow font-bold uppercase tracking-label;
+  }
+  .meta {
+    @apply text-micro uppercase tracking-meta text-ink-faint;
+  }
+  .label {
+    @apply mb-1.5 block text-micro uppercase tracking-label text-ink-muted;
+  }
+  .empty-state {
+    @apply text-eyebrow uppercase tracking-display text-ink-faint;
+  }
+  .crumb {
+    @apply text-eyebrow uppercase tracking-btn;
+  }
+
+  /* ---- Buttons: .btn + one variant (+ optional size/shape) ---------------- */
   .btn {
-    @apply inline-flex items-center justify-center gap-2 rounded-md px-3 py-1.5 text-xs uppercase tracking-widest font-semibold border transition-colors duration-150 cursor-pointer select-none;
+    @apply relative inline-flex h-9 items-center justify-center gap-2 whitespace-nowrap rounded-control border px-3 text-xs font-semibold uppercase tracking-btn transition-colors duration-150 cursor-pointer select-none;
   }
-  .btn-cyan {
-    @apply border-neon-cyan/60 text-neon-cyan bg-neon-cyan/10 hover:bg-neon-cyan/20;
+  .btn-sm {
+    @apply h-8 px-2.5;
   }
-  .btn-magenta {
-    @apply border-neon-magenta/60 text-neon-magenta bg-neon-magenta/10 hover:bg-neon-magenta/20;
+  .btn-icon {
+    @apply w-9 px-0 text-sm;
+  }
+  .btn-icon.btn-sm {
+    @apply w-8;
+  }
+  .btn:disabled {
+    @apply cursor-not-allowed opacity-40 shadow-none;
+  }
+  .btn-primary {
+    @apply border-neon-cyan bg-neon-cyan/15 text-neon-cyan shadow-glow-cyan enabled:hover:bg-neon-cyan/25;
+  }
+  .btn-secondary {
+    @apply border-neon-cyan/60 bg-neon-cyan/10 text-neon-cyan enabled:hover:bg-neon-cyan/20;
+  }
+  .btn-danger {
+    @apply border-neon-magenta/60 bg-neon-magenta/10 text-neon-magenta enabled:hover:bg-neon-magenta/20;
   }
   .btn-ghost {
-    @apply border-edge text-ink-muted bg-transparent hover:text-ink-primary hover:border-ink-faint;
+    @apply border-edge bg-transparent text-ink-muted enabled:hover:border-ink-faint enabled:hover:text-ink-primary;
   }
-  .btn-solid {
-    @apply border-neon-cyan bg-neon-cyan/15 text-neon-cyan shadow-neon-cyan hover:bg-neon-cyan/25;
+  /* Borderless glyph button (dismiss / close ✕). */
+  .btn-plain {
+    @apply border-transparent bg-transparent text-ink-faint enabled:hover:text-ink-primary;
+  }
+  .btn-plain.danger {
+    @apply enabled:hover:text-neon-magenta;
   }
 
+  /* Inline text action (Retry, breadcrumbs, reset). */
+  .link {
+    @apply relative cursor-pointer text-neon-cyan transition-colors duration-150 hover:text-neon-cyan/70 hover:underline underline-offset-2;
+  }
+
+  /* ---- Form fields ------------------------------------------------------- */
   .field {
-    @apply w-full bg-backdrop border border-edge rounded-md px-3 py-2 text-sm text-ink-primary placeholder-ink-faint focus:outline-none focus:border-neon-cyan focus:shadow-neon-cyan transition;
+    @apply w-full min-h-9 rounded-control border border-edge bg-backdrop px-3 py-1.5 text-sm text-ink-primary placeholder-ink-faint transition duration-150 focus:border-neon-cyan focus:shadow-glow-cyan focus:outline-none disabled:opacity-40;
+  }
+  .field-sm {
+    @apply w-auto min-h-7 px-1.5 py-0.5 text-micro;
+  }
+  select.field {
+    @apply cursor-pointer;
   }
 
-  .label {
-    @apply block text-[10px] uppercase tracking-[0.2em] text-ink-muted mb-1.5;
-  }
-
+  /* ---- Chips / tags / badges --------------------------------------------- */
   .chip {
-    @apply inline-flex items-center gap-1.5 rounded px-1.5 py-0.5 text-[10px] uppercase tracking-wider font-semibold;
+    @apply inline-flex items-center gap-1.5 rounded-chip border border-transparent px-1.5 py-0.5 text-micro font-semibold uppercase tracking-meta;
+  }
+  .chip-neutral {
+    @apply border-edge text-ink-muted;
+  }
+  /* Toggleable chip (filters). */
+  .chip-btn {
+    @apply relative min-h-7 cursor-pointer px-2 transition-[color,background-color,border-color,opacity] duration-150;
   }
 
   /* Reusable neon title with glitch underline */
@@ -88,6 +199,51 @@
   }
   .scroll-slim::-webkit-scrollbar-track {
     background: transparent;
+  }
+
+  .hit {
+    position: relative;
+  }
+
+  /* Colour swatch (tag colour picker). */
+  .swatch {
+    @apply relative h-7 w-7 shrink-0 rounded-full;
+  }
+
+  /* ---- Touch: every tap target reaches 44px ------------------------------ */
+  @media (pointer: coarse) {
+    .btn {
+      min-height: 44px;
+    }
+    .btn-icon {
+      min-width: 44px;
+    }
+    .field {
+      min-height: 44px;
+    }
+    .chip-btn {
+      min-height: 36px;
+    }
+    .swatch {
+      width: 36px;
+      height: 36px;
+    }
+    /* Small targets keep their look but get an invisible 44px hit area. */
+    .chip-btn::after,
+    .swatch::after,
+    .link::after,
+    .hit::after {
+      content: '';
+      position: absolute;
+      inset: -4px;
+    }
+    .link::after {
+      inset: -14px -4px;
+    }
+    /* Text-only buttons (card titles) grow to a 44px row. */
+    .tap {
+      min-height: 44px;
+    }
   }
 }
 

@@ -1,5 +1,6 @@
 import { COLUMNS, type Task, type TaskStatus } from '../types';
 import { hoursSince } from '../utils';
+import { TagChip } from './ui';
 
 export function TaskCard({
   task,
@@ -22,17 +23,17 @@ export function TaskCard({
         (e.currentTarget as HTMLElement).classList.add('opacity-40');
       }}
       onDragEnd={(e) => (e.currentTarget as HTMLElement).classList.remove('opacity-40')}
-      className={`panel p-3 cursor-grab active:cursor-grabbing transition-colors group hover:border-neon-cyan/50 ${
-        overdueInProgress ? 'border-neon-magenta/70 shadow-neon-magenta' : ''
+      className={`panel panel-link p-3 cursor-grab active:cursor-grabbing ${
+        overdueInProgress ? 'border-neon-magenta/70 shadow-glow-magenta' : ''
       }`}
     >
       {overdueInProgress && (
-        <div className="flex items-center gap-1.5 text-[9px] uppercase tracking-widest text-neon-magenta mb-1.5 animate-pulse-glow">
+        <div className="meta flex items-center gap-1.5 text-neon-magenta mb-1.5 animate-pulse-glow">
           <span aria-hidden>⚠</span> in progress {Math.floor(inProgressHours)}h
         </div>
       )}
 
-      <button onClick={onOpen} className="text-left w-full">
+      <button onClick={onOpen} className="tap text-left w-full rounded-control">
         <p className="text-sm leading-snug text-ink-primary break-words">{task.title}</p>
         {task.description && (
           <p className="mt-1 text-xs text-ink-muted line-clamp-2 break-words">{task.description}</p>
@@ -41,34 +42,26 @@ export function TaskCard({
 
       <div className="mt-2 flex flex-wrap items-center gap-1.5">
         {task.tags.map((ref) => (
-          <span
-            key={ref.tagId}
-            className="chip"
-            style={{ color: ref.color, border: `1px solid ${ref.color}55`, background: `${ref.color}14` }}
-            title={ref.categoryName}
-          >
-            <span className="w-1.5 h-1.5 rounded-full" style={{ background: ref.color }} />
-            {ref.tagName}
-          </span>
+          <TagChip key={ref.tagId} tag={ref} />
         ))}
       </div>
 
       <div className="mt-2.5 flex items-center justify-between gap-2 border-t border-edge pt-2">
         <div className="flex items-center gap-2 min-w-0">
-          <span className="text-[9px] uppercase tracking-wider text-ink-faint select-none" title="Drag to move">
+          <span className="meta select-none" title="Drag to move">
             ⋮⋮
           </span>
-          <span className="text-[9px] text-ink-faint truncate">#{task.id}</span>
+          <span className="meta truncate">#{task.id}</span>
           {task.commentCount > 0 && (
-            <span className="text-[9px] text-neon-cyan/80" title={`${task.commentCount} comment${task.commentCount === 1 ? '' : 's'}`}>
+            <span className="meta text-neon-cyan/80" title={`${task.commentCount} comment${task.commentCount === 1 ? '' : 's'}`}>
               💬 {task.commentCount}
             </span>
           )}
         </div>
         <div className="flex items-center gap-1.5">
-          <span className="text-[9px] uppercase tracking-wider text-ink-faint">Move to</span>
+          <span className="meta">Move to</span>
           <select
-            className="bg-backdrop border border-edge rounded px-1 py-0.5 text-[10px] text-ink-primary cursor-pointer hover:border-neon-cyan/50"
+            className="field field-sm hover:border-neon-cyan/50"
             value={task.status}
             onChange={(e) => onMove(e.target.value as TaskStatus)}
             onClick={(e) => e.stopPropagation()}

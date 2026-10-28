@@ -91,7 +91,7 @@ function DefaultToast({ toast, onDismiss }: { toast: Toast; onDismiss: () => voi
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className={`text-[11px] uppercase tracking-[0.18em] font-bold ${accent}`}>
+          <p className={`eyebrow ${accent}`}>
             {toast.kind === 'success' ? 'SYSTEM OK' : toast.kind === 'error' ? 'ERROR' : 'NOTICE'}
           </p>
           <p className="mt-1 text-sm text-ink-primary break-words">{toast.title}</p>
@@ -99,7 +99,7 @@ function DefaultToast({ toast, onDismiss }: { toast: Toast; onDismiss: () => voi
         </div>
         <button
           onClick={onDismiss}
-          className="shrink-0 text-ink-faint hover:text-ink-primary transition-colors"
+          className="btn btn-plain btn-icon btn-sm shrink-0 -my-1.5 -mr-2"
           aria-label="Dismiss"
         >
           ✕
@@ -108,7 +108,7 @@ function DefaultToast({ toast, onDismiss }: { toast: Toast; onDismiss: () => voi
       {toast.actions && toast.actions.length > 0 && (
         <div className="mt-2 flex flex-wrap gap-2">
           {toast.actions.map((a) => (
-            <button key={a.label} onClick={a.onClick} className={`btn ${toneClass(a.tone)}`}>
+            <button key={a.label} onClick={a.onClick} className={`btn btn-sm ${toneClass(a.tone)}`}>
               {a.label}
             </button>
           ))}
@@ -121,7 +121,7 @@ function DefaultToast({ toast, onDismiss }: { toast: Toast; onDismiss: () => voi
 function ReminderToast({ toast, onDismiss }: { toast: Toast; onDismiss: () => void }) {
   return (
     <div
-      className="pointer-events-auto animate-slide-in relative overflow-hidden panel border-2 border-neon-magenta/80 shadow-neon-magenta bg-panel/95 backdrop-blur px-4 py-4"
+      className="pointer-events-auto animate-slide-in relative overflow-hidden panel border-2 border-neon-magenta/80 shadow-glow-magenta bg-panel/95 backdrop-blur px-4 py-4"
       role="alert"
     >
       {/* animated hazard stripe */}
@@ -132,7 +132,7 @@ function ReminderToast({ toast, onDismiss }: { toast: Toast; onDismiss: () => vo
             !
           </span>
           <div className="min-w-0">
-            <p className="text-[11px] uppercase tracking-[0.2em] font-bold text-neon-magenta">
+            <p className="eyebrow text-neon-magenta">
               ⚠ Work Reminder
             </p>
             <p className="mt-1 text-sm text-ink-primary break-words">{toast.title}</p>
@@ -141,7 +141,7 @@ function ReminderToast({ toast, onDismiss }: { toast: Toast; onDismiss: () => vo
         </div>
         <button
           onClick={onDismiss}
-          className="shrink-0 text-ink-faint hover:text-neon-magenta transition-colors"
+          className="btn btn-plain danger btn-icon btn-sm shrink-0 -my-1.5 -mr-2"
           aria-label="Dismiss"
         >
           ✕
@@ -150,7 +150,7 @@ function ReminderToast({ toast, onDismiss }: { toast: Toast; onDismiss: () => vo
       {toast.actions && toast.actions.length > 0 && (
         <div className="mt-3 flex flex-wrap gap-2">
           {toast.actions.map((a) => (
-            <button key={a.label} onClick={a.onClick} className={`btn ${toneClass(a.tone)}`}>
+            <button key={a.label} onClick={a.onClick} className={`btn btn-sm ${toneClass(a.tone)}`}>
               {a.label}
             </button>
           ))}
@@ -161,7 +161,7 @@ function ReminderToast({ toast, onDismiss }: { toast: Toast; onDismiss: () => vo
 }
 
 function toneClass(tone?: string) {
-  if (tone === 'magenta') return 'btn-magenta';
-  if (tone === 'cyan') return 'btn-cyan';
+  if (tone === 'magenta') return 'btn-danger';
+  if (tone === 'cyan') return 'btn-secondary';
   return 'btn-ghost';
 }

@@ -36,8 +36,8 @@ export function LoginView({ onSignedIn }: { onSignedIn: () => void }) {
     <div className="min-h-[100dvh] flex items-center justify-center px-4 safe-top pb-safe">
       <form onSubmit={(e) => void submit(e)} className="panel w-full max-w-sm p-6 space-y-5 animate-slide-in">
         <div>
-          <h1 className="glitch-title text-2xl">KANBATE</h1>
-          <p className="text-xs text-ink-muted mt-1 uppercase tracking-[0.2em]">sign in to continue</p>
+          <h1 className="page-title">KANBATE</h1>
+          <p className="page-subtitle">sign in to continue</p>
         </div>
 
         <div>
@@ -72,7 +72,7 @@ export function LoginView({ onSignedIn }: { onSignedIn: () => void }) {
           </p>
         )}
 
-        <button type="submit" className="btn btn-solid w-full py-2.5" disabled={busy}>
+        <button type="submit" className="btn btn-primary w-full" disabled={busy}>
           {busy ? 'Signing in…' : 'Sign in'}
         </button>
       </form>

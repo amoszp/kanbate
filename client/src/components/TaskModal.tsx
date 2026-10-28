@@ -1,9 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useToast } from '../toast';
 import { COLUMNS, type Project, type TagCategory, type Task, type TransferResult } from '../types';
 import { formatDateTime } from '../utils';
 import { CommentsPanel } from './CommentsPanel';
+import { ConfirmDialog } from './ConfirmDialog';
 import { TransferDialog } from './TransferDialog';
+import { Modal } from './ui';
 
 export function TaskModal({
   task,
@@ -42,6 +44,7 @@ export function TaskModal({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [transferring, setTransferring] = useState(false);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
   const { push } = useToast();
   const isNew = task.id === 0;
   const projectName = projects?.find((p) => p.id === task.projectId)?.name;
@@ -56,14 +59,6 @@ export function TaskModal({
     onCancel();
     await onTransferred?.(result);
   };
-
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onCancel();
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [onCancel]);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -90,7 +85,7 @@ export function TaskModal({
 
   const remove = async () => {
     if (busy) return;
-    if (!window.confirm('Delete this task permanently?')) return;
+    setConfirmingDelete(false);
     setBusy(true);
     try {
       await onDelete();
@@ -104,22 +99,14 @@ export function TaskModal({
 
   return (
     <>
-    <div
-      className="fixed inset-0 z-50 flex items-start justify-center bg-black/70 backdrop-blur-sm p-4 overflow-y-auto"
-      onClick={onCancel}
-    >
-      <form
-        onSubmit={submit}
-        className="panel w-full max-w-xl my-6 p-5 animate-slide-in border-2 border-neon-cyan/40"
-        onClick={(e) => e.stopPropagation()}
-      >
+    <Modal onClose={onCancel} size="xl" onSubmit={submit}>
         <div className="flex items-center justify-between gap-2">
-          <p className="text-[11px] uppercase tracking-[0.2em] text-neon-cyan font-bold">
+          <p className="eyebrow text-neon-cyan">
             {isNew ? 'New task' : 'Edit task'}
             {projectName && <span className="text-ink-muted font-normal"> · {projectName}</span>}
           </p>
           {!isNew && (
-            <span className="chip border border-edge text-ink-muted">
+            <span className="chip chip-neutral">
               id #{task.id} · created {formatDateTime(task.createdAt)}
             </span>
           )}
@@ -145,7 +132,7 @@ export function TaskModal({
         <div className="mt-3 grid grid-cols-2 gap-3">
           <div>
             <label className="label" htmlFor="task-status">Status</label>
-            <select id="task-status" className="field cursor-pointer" value={status} onChange={(e) => setStatus(e.target.value as Task['status'])}>
+            <select id="task-status" className="field" value={status} onChange={(e) => setStatus(e.target.value as Task['status'])}>
               {COLUMNS.map((c) => (
                 <option key={c.key} value={c.key}>
                   {c.label}
@@ -165,7 +152,7 @@ export function TaskModal({
                   <label className="label" htmlFor={`task-tag-${c.id}`}>{c.name}</label>
                   <select
                     id={`task-tag-${c.id}`}
-                    className="field cursor-pointer"
+                    className="field"
                     value={value}
                     onChange={(e) => setTagValues((prev) => ({ ...prev, [c.id]: e.target.value }))}
                   >
@@ -182,7 +169,7 @@ export function TaskModal({
           </div>
         )}
 
-        <div className="mt-4 text-[10px] uppercase tracking-wider text-ink-faint grid grid-cols-2 gap-2">
+        <div className="meta mt-4 grid grid-cols-2 gap-2">
           <span>Updated: {formatDateTime(task.updatedAt)}</span>
           <span>
             In progress since: {formatDateTime(task.movedToInProgressAt)}
@@ -196,12 +183,12 @@ export function TaskModal({
         <div className="mt-5 flex flex-wrap justify-between gap-2">
           <div className="flex gap-2">
             {!isNew && (
-              <button type="button" className="btn btn-magenta" onClick={() => void remove()}>
+              <button type="button" className="btn btn-danger" onClick={() => !busy && setConfirmingDelete(true)}>
                 Delete
               </button>
             )}
             {!isNew && projects && (
-              <button type="button" className="btn btn-cyan" onClick={() => setTransferring(true)}>
+              <button type="button" className="btn btn-secondary" onClick={() => setTransferring(true)}>
                 ⇄ Move / Copy
               </button>
             )}
@@ -210,15 +197,14 @@ export function TaskModal({
             <button type="button" className="btn btn-ghost" onClick={onCancel}>
               Cancel
             </button>
-            <button type="submit" className="btn btn-solid" disabled={busy}>
+            <button type="submit" className="btn btn-primary" disabled={busy}>
               {busy ? 'Saving…' : 'Save task'}
             </button>
           </div>
         </div>
 
         {!isNew && <CommentsPanel target={{ type: 'task', id: task.id }} onChanged={onCommentsChanged} />}
-      </form>
-    </div>
+    </Modal>
 
     {/* Sibling of the overlay (not a child) so its backdrop clicks don't
         bubble up and close the task modal too. */}
@@ -228,6 +214,15 @@ export function TaskModal({
         projects={projects}
         onDone={finishTransfer}
         onCancel={() => setTransferring(false)}
+      />
+    )}
+
+    {confirmingDelete && (
+      <ConfirmDialog
+        title="Delete this task permanently?"
+        message={task.title}
+        onConfirm={() => void remove()}
+        onCancel={() => setConfirmingDelete(false)}
       />
     )}
     </>

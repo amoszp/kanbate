@@ -1,7 +1,7 @@
 /* Kanbate service worker — network-first for navigation, cache-first for assets. */
 // Bump CACHE whenever the app shell/asset set changes so old caches are
 // dropped on activate instead of serving stale UI.
-const CACHE = 'kanbate-v3';
+const CACHE = 'kanbate-v4';
 const PRECACHE = ['/', '/index.html', '/manifest.json', '/favicon.svg', '/icons/source.svg', '/icons/icon-192.png', '/icons/icon-512.png'];
 
 self.addEventListener('install', (event) => {

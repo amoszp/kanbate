@@ -54,8 +54,8 @@ export function SettingsView({
   return (
     <div className="space-y-6 max-w-4xl">
       <div>
-        <h1 className="glitch-title text-2xl sm:text-3xl">SETTINGS</h1>
-        <p className="text-xs text-ink-muted mt-1 uppercase tracking-[0.2em]">
+        <h1 className="page-title">SETTINGS</h1>
+        <p className="page-subtitle">
           tag blocks · automation rules · local data
         </p>
       </div>
@@ -63,12 +63,12 @@ export function SettingsView({
       {session.user && (
         <section className="panel p-4 flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h2 className="text-sm font-bold uppercase tracking-widest text-neon-cyan">Account</h2>
+            <h2 className="section-title">Account</h2>
             <p className="text-xs text-ink-muted mt-1">
               Signed in as <span className="text-ink-primary">{session.user.displayName || session.user.username}</span>
             </p>
           </div>
-          <button className="btn btn-magenta" onClick={() => void onSignOut()}>
+          <button className="btn btn-danger" onClick={() => void onSignOut()}>
             Sign out
           </button>
         </section>
@@ -77,12 +77,12 @@ export function SettingsView({
       <section className="panel p-4">
         <header className="flex items-center justify-between gap-2">
           <div>
-            <h2 className="text-sm uppercase tracking-[0.25em] text-neon-cyan font-bold">Tag blocks</h2>
-            <p className="text-[10px] uppercase tracking-wider text-ink-faint mt-0.5">
+            <h2 className="section-title">Tag blocks</h2>
+            <p className="meta mt-0.5">
               Each block is a group of tags; a task picks one tag per block.
             </p>
           </div>
-          <button className="btn btn-solid" onClick={() => setAddingBlock(true)}>
+          <button className="btn btn-primary" onClick={() => setAddingBlock(true)}>
             + New block
           </button>
         </header>
@@ -98,7 +98,7 @@ export function SettingsView({
             />
           ))}
           {categories.length === 0 && (
-            <p className="text-xs text-ink-faint uppercase tracking-widest py-6 text-center lg:col-span-2">
+            <p className="empty-state py-6 text-center lg:col-span-2">
               No tag blocks yet — add one to start tagging tasks.
             </p>
           )}
@@ -106,7 +106,7 @@ export function SettingsView({
       </section>
 
       <section className="panel p-4">
-        <h2 className="text-sm uppercase tracking-[0.25em] text-neon-cyan font-bold">
+        <h2 className="section-title">
           In-App Automation Engine
         </h2>
         <ul className="mt-3 space-y-2 text-sm text-ink-muted">
@@ -136,7 +136,7 @@ export function SettingsView({
       </section>
 
       <section className="panel p-4">
-        <h2 className="text-sm uppercase tracking-[0.25em] text-neon-cyan font-bold">Data</h2>
+        <h2 className="section-title">Data</h2>
         <p className="mt-3 text-sm text-ink-muted">
           All data is stored locally in SQLite at <code className="text-neon-cyan">./data/kanbate.db</code> on the
           host. Projects, tasks and history live in the mounted volume and survive container updates. Deleting a

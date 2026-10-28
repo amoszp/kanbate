@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { api } from '../api';
 import { useToast } from '../toast';
 import { NEON_SWATCHES, type Tag, type TagCategory } from '../types';
+import { ConfirmDialog } from './ConfirmDialog';
 
 export function TagManager({
   category,
@@ -20,6 +21,7 @@ export function TagManager({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [editing, setEditing] = useState<Tag | null>(null);
+  const [deleting, setDeleting] = useState<Tag | null>(null);
 
   useEffect(() => {
     if (editing) {
@@ -58,7 +60,7 @@ export function TagManager({
   };
 
   const remove = async (tag: Tag) => {
-    if (!window.confirm(`Delete tag «${tag.name}»? Tasks using it will lose this tag.`)) return;
+    setDeleting(null);
     await api.deleteTag(tag.id);
     push({ kind: 'info', title: 'Tag deleted', message: tag.name });
     await refresh();
@@ -68,16 +70,16 @@ export function TagManager({
     <section className="panel p-4">
       <header className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2 min-w-0">
-          <h2 className="text-sm uppercase tracking-[0.25em] text-neon-cyan font-bold truncate">
+          <h2 className="section-title truncate">
             {category.name}
           </h2>
-          <span className="chip border border-edge text-ink-muted shrink-0">{tags.length}</span>
+          <span className="chip chip-neutral shrink-0">{tags.length}</span>
         </div>
         <div className="flex gap-1.5 shrink-0">
-          <button className="btn btn-cyan !py-1 !px-2" onClick={onRenameBlock} aria-label="Rename block">
+          <button className="btn btn-secondary btn-icon" onClick={onRenameBlock} aria-label="Rename block">
             ✎
           </button>
-          <button className="btn btn-magenta !py-1 !px-2" onClick={onDeleteBlock} aria-label="Delete block">
+          <button className="btn btn-danger btn-icon" onClick={onDeleteBlock} aria-label="Delete block">
             ✕
           </button>
         </div>
@@ -85,23 +87,23 @@ export function TagManager({
 
       <ul className="mt-4 space-y-2">
         {tags.map((tag) => (
-          <li key={tag.id} className="flex items-center justify-between gap-2 rounded border border-edge bg-backdrop px-3 py-2">
+          <li key={tag.id} className="inset flex items-center justify-between gap-2 px-3 py-2">
             <span className="flex items-center gap-2 min-w-0">
               <span className="w-3 h-3 rounded-full shrink-0" style={{ background: tag.color, boxShadow: `0 0 8px ${tag.color}` }} />
               <span className="text-sm text-ink-primary truncate">{tag.name}</span>
             </span>
             <span className="flex gap-1.5 shrink-0">
-              <button className="btn btn-cyan !py-1 !px-2" onClick={() => setEditing(tag)} aria-label={`Edit ${tag.name}`}>
+              <button className="btn btn-secondary btn-icon" onClick={() => setEditing(tag)} aria-label={`Edit ${tag.name}`}>
                 ✎
               </button>
-              <button className="btn btn-magenta !py-1 !px-2" onClick={() => void remove(tag)} aria-label={`Delete ${tag.name}`}>
+              <button className="btn btn-danger btn-icon" onClick={() => setDeleting(tag)} aria-label={`Delete ${tag.name}`}>
                 ✕
               </button>
             </span>
           </li>
         ))}
         {tags.length === 0 && (
-          <li className="text-xs text-ink-faint text-center py-4 uppercase tracking-widest">no tags yet</li>
+          <li className="empty-state text-center py-4">no tags yet</li>
         )}
       </ul>
 
@@ -115,13 +117,13 @@ export function TagManager({
             placeholder={editing ? 'New tag name' : 'Tag name'}
             aria-label="Tag name"
           />
-          <div className="flex items-center gap-1.5 flex-wrap">
+          <div className="flex items-center gap-2 flex-wrap">
             {NEON_SWATCHES.map((c) => (
               <button
                 key={c}
                 type="button"
                 onClick={() => setColor(c)}
-                className={`w-6 h-6 rounded-full transition-transform ${color === c ? 'scale-110 ring-2 ring-offset-1 ring-neon-cyan' : 'hover:scale-105'}`}
+                className={`swatch transition-transform duration-150 ${color === c ? 'scale-110 ring-2 ring-offset-2 ring-offset-panel ring-neon-cyan' : 'hover:scale-105'}`}
                 style={{ background: c, boxShadow: color === c ? `0 0 10px ${c}` : `0 0 6px ${c}55` }}
                 aria-label={`Color ${c}`}
               />
@@ -130,11 +132,11 @@ export function TagManager({
               type="color"
               value={color}
               onChange={(e) => setColor(e.target.value)}
-              className="w-6 h-6 rounded cursor-pointer border-none bg-transparent"
+              className="swatch cursor-pointer border-none bg-transparent"
               aria-label="Custom color"
             />
           </div>
-          <button type="submit" className="btn btn-solid" disabled={busy}>
+          <button type="submit" className="btn btn-primary" disabled={busy}>
             {busy ? '…' : editing ? 'Save' : 'Add tag'}
           </button>
           {editing && (
@@ -153,6 +155,15 @@ export function TagManager({
         </div>
         {error && <p className="mt-2 text-xs text-neon-magenta">{error}</p>}
       </form>
+
+      {deleting && (
+        <ConfirmDialog
+          title={`Delete tag «${deleting.name}»?`}
+          message="Tasks using it will lose this tag."
+          onConfirm={() => void remove(deleting)}
+          onCancel={() => setDeleting(null)}
+        />
+      )}
     </section>
   );
 }

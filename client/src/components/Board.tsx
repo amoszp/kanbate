@@ -40,8 +40,8 @@ export function Board({
   if (!project) {
     return (
       <div className="panel p-10 text-center space-y-3">
-        <p className="text-neon-magenta text-sm uppercase tracking-[0.3em]">project not found</p>
-        <button className="btn btn-cyan" onClick={() => navigate('/')}>
+        <p className="empty-state text-neon-magenta">project not found</p>
+        <button className="btn btn-secondary" onClick={() => navigate('/')}>
           ← Back to dashboard
         </button>
       </div>
@@ -116,15 +116,15 @@ export function Board({
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="flex items-center gap-2">
-            <button onClick={() => navigate('/')} className="text-[11px] text-neon-cyan hover:text-neon-cyan/70 uppercase tracking-widest">
+            <button onClick={() => navigate('/')} className="link crumb">
               ← dashboard
             </button>
-            <span className="text-[11px] text-ink-faint">/</span>
-            <span className="text-[11px] uppercase tracking-widest text-neon-magenta">board</span>
+            <span className="crumb text-ink-faint">/</span>
+            <span className="crumb text-neon-magenta">board</span>
           </div>
-          <h1 className="glitch-title text-2xl sm:text-3xl truncate">{project.name}</h1>
+          <h1 className="page-title truncate">{project.name}</h1>
           <p className="text-xs text-ink-muted mt-1">{project.description || '—'}</p>
-          <p className="text-[10px] text-ink-faint uppercase tracking-wider mt-1">
+          <p className="meta mt-1">
             created {formatDateTime(project.createdAt)} · updated {formatDateTime(project.updatedAt)}
           </p>
         </div>
@@ -133,13 +133,13 @@ export function Board({
           <button className="btn btn-ghost" onClick={() => navigate(`/history/${projectId}`)}>
             🗄 History ({project.historyCount})
           </button>
-          <button className="btn btn-solid" onClick={() => setAdding(true)}>
+          <button className="btn btn-primary" onClick={() => setAdding(true)}>
             + Add task
           </button>
-          <button className="btn btn-cyan" onClick={() => setEditProject(true)} aria-label="Edit project">
+          <button className="btn btn-secondary btn-icon" onClick={() => setEditProject(true)} aria-label="Edit project">
             ✎
           </button>
-          <button className="btn btn-magenta" onClick={() => setDeletingProject(true)} aria-label="Delete project">
+          <button className="btn btn-danger btn-icon" onClick={() => setDeletingProject(true)} aria-label="Delete project">
             ✕
           </button>
         </div>
@@ -153,7 +153,7 @@ export function Board({
           return (
             <div
               key={col.key}
-              className="flex flex-col w-full min-w-0 rounded-lg border border-edge bg-panel/60 lg:min-w-[220px] lg:max-w-[340px]"
+              className="flex flex-col w-full min-w-0 rounded-panel border border-edge bg-panel/60 lg:min-w-[220px] lg:max-w-[340px]"
               onDragOver={(e) => {
                 e.preventDefault();
                 e.dataTransfer.dropEffect = 'move';
@@ -171,19 +171,19 @@ export function Board({
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full shrink-0" style={{ background: col.color, boxShadow: `0 0 8px ${col.color}` }} />
-                    <h2 className="text-xs uppercase tracking-[0.18em] font-bold" style={{ color: col.color }}>
+                    <h2 className="text-xs uppercase tracking-label font-bold" style={{ color: col.color }}>
                       {col.label}
                     </h2>
                   </div>
-                  <p className="text-[9px] uppercase tracking-wider text-ink-faint mt-0.5">{col.hint}</p>
+                  <p className="meta mt-0.5">{col.hint}</p>
                 </div>
-                <span className="chip border border-edge text-ink-primary">{tasks.length}</span>
+                <span className="chip chip-neutral">{tasks.length}</span>
               </div>
 
               {/* Tasks */}
               <div className="flex-1 p-2 space-y-2 min-h-[120px]">
                 {tasks.length === 0 ? (
-                  <div className="text-center text-[10px] uppercase tracking-widest text-ink-faint py-6 border border-dashed border-edge rounded">
+                  <div className="empty-state text-center py-6 border border-dashed border-edge rounded-control">
                     empty
                   </div>
                 ) : (
@@ -197,7 +197,7 @@ export function Board({
         })}
       </div>
 
-      <p className="text-[10px] text-ink-faint uppercase tracking-wider">
+      <p className="meta">
         Tip: drag a card into another column, or use its «Move to» selector (touch friendly).
       </p>
 

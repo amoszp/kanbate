@@ -46,28 +46,28 @@ export function Dashboard({
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="glitch-title text-2xl sm:text-3xl">DASHBOARD</h1>
-        <p className="text-xs text-ink-muted mt-1 uppercase tracking-[0.2em]">
+        <h1 className="page-title">DASHBOARD</h1>
+        <p className="page-subtitle">
           {loading ? 'loading boards…' : `${projects.length} project${projects.length === 1 ? '' : 's'} · one board per project`}
         </p>
       </div>
 
       <QuickAddBar projects={projects} refresh={refresh} />
 
-      <div className="flex items-center justify-between">
-        <h2 className="text-[11px] uppercase tracking-[0.3em] text-ink-muted">Projects</h2>
-        <button className="btn btn-cyan" onClick={() => setProjectModal({})}>
+      <div className="flex items-center justify-between gap-3">
+        <h2 className="section-title">Projects</h2>
+        <button className="btn btn-primary" onClick={() => setProjectModal({})}>
           + New project
         </button>
       </div>
 
       {loading && projects.length === 0 ? (
-        <div className="panel p-10 text-center text-sm text-ink-muted">booting terminal…</div>
+        <div className="panel p-10 text-center empty-state">booting terminal…</div>
       ) : projects.length === 0 ? (
         <div className="panel p-10 text-center space-y-3">
-          <p className="text-neon-cyan/80 text-sm uppercase tracking-[0.3em]">no projects found</p>
+          <p className="empty-state">no projects found</p>
           <p className="text-xs text-ink-muted">Create your first project to start a kanban board.</p>
-          <button className="btn btn-solid" onClick={() => setProjectModal({})}>
+          <button className="btn btn-primary" onClick={() => setProjectModal({})}>
             + Create project
           </button>
         </div>
@@ -122,17 +122,17 @@ function ProjectCard({
   const total = Object.values(project.taskCounts).reduce((a, b) => a + b, 0);
 
   return (
-    <div className="panel p-4 flex flex-col gap-3 hover:border-neon-cyan/40 transition-colors relative">
+    <div className="panel panel-link p-4 flex flex-col gap-3 relative">
       {unread > 0 && (
         <span
-          className="absolute -top-2 -right-2 z-10 min-w-[1.6rem] h-6 px-1.5 rounded-full flex items-center justify-center text-[11px] font-bold text-white bg-neon-magenta shadow-neon-magenta animate-pulse-glow"
+          className="absolute -top-2 -right-2 z-10 min-w-[1.6rem] h-6 px-1.5 rounded-full flex items-center justify-center text-eyebrow font-bold text-white bg-neon-magenta shadow-glow-magenta animate-pulse-glow"
           title={`${unread} unread task${unread === 1 ? '' : 's'} in Backlog`}
         >
           {unread}
         </span>
       )}
 
-      <button onClick={onOpen} className="text-left group">
+      <button onClick={onOpen} className="tap text-left group rounded-control">
         <h3 className="glitch-title text-lg truncate group-hover:text-neon-cyan transition-colors">
           {project.name}
         </h3>
@@ -143,8 +143,8 @@ function ProjectCard({
 
       <div className="grid grid-cols-4 gap-1.5 text-center">
         {COLUMNS.map((c) => (
-          <div key={c.key} className="rounded border border-edge bg-backdrop px-1 py-1.5" title={c.label}>
-            <div className="text-[9px] uppercase tracking-wider" style={{ color: c.color }}>
+          <div key={c.key} className="inset px-1 py-1.5" title={c.label}>
+            <div className="text-micro uppercase tracking-meta" style={{ color: c.color }}>
               {c.label.replace(' ', '\u00A0')}
             </div>
             <div className="text-sm font-bold text-ink-primary">
@@ -154,19 +154,19 @@ function ProjectCard({
         ))}
       </div>
 
-      <div className="flex items-center justify-between gap-2 text-[10px] text-ink-faint uppercase tracking-wider">
+      <div className="meta flex items-center justify-between gap-2">
         <span>{total} task{total === 1 ? '' : 's'}</span>
         <span>archive: {project.historyCount}</span>
       </div>
 
       <div className="flex gap-2">
-        <button className="btn btn-solid flex-1" onClick={onOpen}>
+        <button className="btn btn-primary flex-1" onClick={onOpen}>
           Open board
         </button>
-        <button className="btn btn-cyan" onClick={onEdit} aria-label="Edit project">
+        <button className="btn btn-secondary btn-icon" onClick={onEdit} aria-label="Edit project">
           ✎
         </button>
-        <button className="btn btn-magenta" onClick={onDelete} aria-label="Delete project">
+        <button className="btn btn-danger btn-icon" onClick={onDelete} aria-label="Delete project">
           ✕
         </button>
       </div>

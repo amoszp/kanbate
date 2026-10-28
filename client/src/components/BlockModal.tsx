@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Modal } from './ui';
 
 export function BlockModal({
   title,
@@ -35,16 +36,8 @@ export function BlockModal({
   };
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
-      onClick={onCancel}
-    >
-      <form
-        onSubmit={submit}
-        className="panel w-full max-w-sm p-5 animate-slide-in border-2 border-neon-cyan/40"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <p className="text-[11px] uppercase tracking-[0.2em] text-neon-cyan font-bold">{title}</p>
+    <Modal onClose={onCancel} size="sm" onSubmit={submit}>
+        <p className="eyebrow text-neon-cyan">{title}</p>
         <div className="mt-4">
           <label className="label" htmlFor="block-name">Block name</label>
           <input
@@ -55,7 +48,7 @@ export function BlockModal({
             placeholder="e.g. Priority, Effort, Tool…"
             autoFocus
           />
-          <p className="mt-2 text-[10px] uppercase tracking-wider text-ink-faint">
+          <p className="meta mt-2">
             A block is a group of tags. Every task can pick one tag per block.
           </p>
         </div>
@@ -64,11 +57,10 @@ export function BlockModal({
           <button type="button" className="btn btn-ghost" onClick={onCancel}>
             Cancel
           </button>
-          <button type="submit" className="btn btn-solid" disabled={busy}>
+          <button type="submit" className="btn btn-primary" disabled={busy}>
             {busy ? 'Saving…' : submitLabel}
           </button>
         </div>
-      </form>
-    </div>
+    </Modal>
   );
 }

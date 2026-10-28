@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { api } from '../api';
 import type { Project, Task, TransferResult } from '../types';
+import { Modal } from './ui';
 
 const NEW_PROJECT = 'new';
 
@@ -22,18 +23,6 @@ export function TransferDialog({
   const [newName, setNewName] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        e.stopImmediatePropagation();
-        onCancel();
-      }
-    };
-    // Capture phase so Escape closes this dialog, not the task modal beneath.
-    window.addEventListener('keydown', onKey, true);
-    return () => window.removeEventListener('keydown', onKey, true);
-  }, [onCancel]);
 
   // Copying into the same project (a duplicate) is allowed; moving is not.
   const choices = mode === 'copy' ? projects : others;
@@ -68,18 +57,8 @@ export function TransferDialog({
   };
 
   return (
-    <div
-      className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
-      onClick={onCancel}
-    >
-      <form
-        onSubmit={submit}
-        className="panel w-full max-w-md p-5 animate-slide-in border-2 border-neon-cyan/50"
-        onClick={(e) => e.stopPropagation()}
-        role="dialog"
-        aria-modal="true"
-      >
-        <p className="text-[11px] uppercase tracking-[0.2em] text-neon-cyan font-bold">⇄ Move / copy task</p>
+    <Modal onClose={onCancel} layer="top" onSubmit={submit}>
+        <p className="eyebrow text-neon-cyan">⇄ Move / copy task</p>
         <h2 className="mt-1 text-sm text-ink-primary break-words">
           #{task.id} · {task.title}
         </h2>
@@ -91,14 +70,14 @@ export function TransferDialog({
               type="button"
               role="radio"
               aria-checked={mode === m}
-              className={`btn ${mode === m ? 'btn-solid' : 'btn-ghost'}`}
+              className={`btn ${mode === m ? 'btn-secondary' : 'btn-ghost'}`}
               onClick={() => changeMode(m)}
             >
               {m === 'move' ? '→ Move' : '⧉ Copy'}
             </button>
           ))}
         </div>
-        <p className="mt-2 text-[10px] text-ink-faint uppercase tracking-wider">
+        <p className="meta mt-2">
           {mode === 'move'
             ? 'The task leaves this project, keeping its id, tags and comments.'
             : 'A new task is created with the same tags and comments; the original stays.'}
@@ -108,7 +87,7 @@ export function TransferDialog({
           <label className="label" htmlFor="transfer-target">Target project</label>
           <select
             id="transfer-target"
-            className="field cursor-pointer"
+            className="field"
             value={target}
             onChange={(e) => setTarget(e.target.value)}
           >
@@ -142,11 +121,10 @@ export function TransferDialog({
           <button type="button" className="btn btn-ghost" onClick={onCancel}>
             Cancel
           </button>
-          <button type="submit" className="btn btn-solid" disabled={busy}>
+          <button type="submit" className="btn btn-primary" disabled={busy}>
             {busy ? 'Working…' : mode === 'move' ? 'Move task' : 'Copy task'}
           </button>
         </div>
-      </form>
-    </div>
+    </Modal>
   );
 }

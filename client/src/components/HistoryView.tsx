@@ -5,6 +5,7 @@ import type { HistoryEntry, ProjectWithTasks } from '../types';
 import { formatDateTime } from '../utils';
 import { ConfirmDialog } from './ConfirmDialog';
 import { ArchivedEntryModal } from './ArchivedEntryModal';
+import { TagChip } from './ui';
 import type { Route } from '../hooks/useHashRoute';
 
 export function HistoryView({
@@ -37,8 +38,8 @@ export function HistoryView({
   if (!project) {
     return (
       <div className="panel p-10 text-center space-y-3">
-        <p className="text-neon-magenta text-sm uppercase tracking-[0.3em]">project not found</p>
-        <button className="btn btn-cyan" onClick={() => navigate('/')}>
+        <p className="empty-state text-neon-magenta">project not found</p>
+        <button className="btn btn-secondary" onClick={() => navigate('/')}>
           ← Back to dashboard
         </button>
       </div>
@@ -59,37 +60,37 @@ export function HistoryView({
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <div className="flex items-center gap-2">
-            <button onClick={() => navigate(`/board/${projectId}`)} className="text-[11px] text-neon-cyan hover:text-neon-cyan/70 uppercase tracking-widest">
+            <button onClick={() => navigate(`/board/${projectId}`)} className="link crumb">
               ← {project.name}
             </button>
-            <span className="text-[11px] text-ink-faint">/</span>
-            <span className="text-[11px] uppercase tracking-widest text-neon-magenta">history archive</span>
+            <span className="crumb text-ink-faint">/</span>
+            <span className="crumb text-neon-magenta">history archive</span>
           </div>
-          <h1 className="glitch-title text-2xl sm:text-3xl">HISTORY ARCHIVE</h1>
-          <p className="text-xs text-ink-muted mt-1 uppercase tracking-[0.2em]">
+          <h1 className="page-title">HISTORY ARCHIVE</h1>
+          <p className="page-subtitle">
             resolved tasks auto-archived after 48h · {entries.length} archived
           </p>
         </div>
       </div>
 
       {loading ? (
-        <div className="panel p-10 text-center text-sm text-ink-muted">reading archive…</div>
+        <div className="panel p-10 text-center empty-state">reading archive…</div>
       ) : entries.length === 0 ? (
         <div className="panel p-10 text-center">
-          <p className="text-[11px] uppercase tracking-[0.3em] text-ink-faint">
+          <p className="empty-state">
             archive empty — resolved tasks land here automatically after 48h
           </p>
         </div>
       ) : (
         <div className="space-y-2">
           {entries.map((entry) => (
-            <article key={entry.id} className="panel p-4">
+            <article key={entry.id} className="panel panel-link p-4">
               <div className="flex items-start justify-between gap-3">
-                <button className="min-w-0 text-left flex-1" onClick={() => setViewing(entry)}>
-                  <h3 className="text-sm text-ink-primary break-words hover:text-neon-cyan transition-colors">
+                <button className="tap min-w-0 text-left flex-1 rounded-control" onClick={() => setViewing(entry)}>
+                  <h3 className="text-sm text-ink-primary break-words">
                     {entry.title}
                     {entry.commentCount > 0 && (
-                      <span className="ml-2 text-[10px] text-neon-cyan/80">💬 {entry.commentCount}</span>
+                      <span className="meta ml-2 text-neon-cyan/80">💬 {entry.commentCount}</span>
                     )}
                   </h3>
                   {entry.description && (
@@ -97,23 +98,16 @@ export function HistoryView({
                   )}
                   <div className="mt-2 flex flex-wrap gap-1.5">
                     {entry.tags.map((ref) => (
-                      <span
-                        key={ref.tagId}
-                        className="chip"
-                        style={{ color: ref.color, border: `1px solid ${ref.color}55`, background: `${ref.color}14` }}
-                        title={ref.categoryName}
-                      >
-                        {ref.tagName}
-                      </span>
+                      <TagChip key={ref.tagId} tag={ref} />
                     ))}
-                    <span className="chip border border-edge text-ink-muted">was {entry.status}</span>
+                    <span className="chip chip-neutral">was {entry.status}</span>
                   </div>
-                  <p className="mt-2 text-[10px] uppercase tracking-wider text-ink-faint">
+                  <p className="meta mt-2">
                     resolved {formatDateTime(entry.movedToResolvedAt)} · archived {formatDateTime(entry.archivedAt)}
                   </p>
                 </button>
                 <button
-                  className="btn btn-magenta shrink-0 !px-2 !py-1"
+                  className="btn btn-danger btn-icon shrink-0"
                   onClick={() => setDeleting(entry)}
                   aria-label={`Remove archive entry ${entry.title}`}
                 >

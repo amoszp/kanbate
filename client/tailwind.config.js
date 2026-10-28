@@ -34,11 +34,31 @@ export default {
           'monospace',
         ],
       },
+      // Design tokens: one scale per property. Components use these through the
+      // primitives in src/index.css (.btn, .field, .chip, .panel, .eyebrow, …).
+      fontSize: {
+        micro: ['10px', { lineHeight: '14px' }], // meta: timestamps, ids, hints, chips
+        eyebrow: ['11px', { lineHeight: '16px' }], // eyebrows, breadcrumbs, modal titles
+      },
+      letterSpacing: {
+        meta: '0.05em', // small caps text: meta lines, chips
+        btn: '0.1em', // buttons
+        label: '0.2em', // labels, eyebrows, section titles, subtitles
+        display: '0.3em', // empty states, footer, header subtitle
+      },
+      borderRadius: {
+        panel: '0.5rem', // panels, columns, modals, toasts
+        control: '0.375rem', // buttons, inputs, inset surfaces
+        chip: '0.25rem', // chips/tags/badges
+      },
+      // Named apart from the colours above: a shadow key that matches a colour
+      // key (e.g. `panel`, `neon-cyan`) also emits the shadow-colour utility,
+      // which overrides the shadow with the solid colour.
       boxShadow: {
-        'neon-cyan': '0 0 12px rgba(0, 240, 255, 0.45), inset 0 0 6px rgba(0, 240, 255, 0.15)',
-        'neon-magenta': '0 0 16px rgba(255, 42, 109, 0.5), inset 0 0 6px rgba(255, 42, 109, 0.15)',
-        'neon-yellow': '0 0 12px rgba(204, 255, 0, 0.4)',
-        panel: '0 4px 24px rgba(0, 0, 0, 0.55)',
+        'glow-cyan': '0 0 12px rgba(0, 240, 255, 0.45), inset 0 0 6px rgba(0, 240, 255, 0.15)',
+        'glow-magenta': '0 0 16px rgba(255, 42, 109, 0.5), inset 0 0 6px rgba(255, 42, 109, 0.15)',
+        'glow-yellow': '0 0 12px rgba(204, 255, 0, 0.4)',
+        card: '0 4px 24px rgba(0, 0, 0, 0.55)',
       },
       keyframes: {
         'pulse-glow': {

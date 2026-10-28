@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import type { Project } from '../types';
+import { Modal } from './ui';
 
 export function ProjectModal({
   initial,
@@ -14,14 +15,6 @@ export function ProjectModal({
   const [description, setDescription] = useState(initial?.description ?? '');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onCancel();
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [onCancel]);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,17 +35,9 @@ export function ProjectModal({
   };
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
-      onClick={onCancel}
-    >
-      <form
-        onSubmit={submit}
-        className="panel w-full max-w-lg p-5 animate-slide-in border-2 border-neon-cyan/40"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <p className="text-[11px] uppercase tracking-[0.2em] text-neon-cyan font-bold">
-          {initial ? 'EDIT PROJECT' : 'NEW PROJECT'}
+    <Modal onClose={onCancel} size="lg" onSubmit={submit}>
+        <p className="eyebrow text-neon-cyan">
+          {initial ? 'Edit project' : 'New project'}
         </p>
         <div className="mt-4">
           <label className="label" htmlFor="proj-name">Project name</label>
@@ -81,11 +66,10 @@ export function ProjectModal({
           <button type="button" className="btn btn-ghost" onClick={onCancel}>
             Cancel
           </button>
-          <button type="submit" className="btn btn-solid" disabled={busy}>
+          <button type="submit" className="btn btn-primary" disabled={busy}>
             {busy ? 'Saving…' : initial ? 'Save changes' : 'Create project'}
           </button>
         </div>
-      </form>
-    </div>
+    </Modal>
   );
 }

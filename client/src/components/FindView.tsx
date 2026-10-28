@@ -6,6 +6,7 @@ import { COLUMNS, type HistoryEntry, type ProjectWithTasks, type TagCategory, ty
 import { formatDateTime, relativeTime } from '../utils';
 import { TaskModal } from './TaskModal';
 import { ArchivedEntryModal } from './ArchivedEntryModal';
+import { TagChip, chipStyle } from './ui';
 import type { Route } from '../hooks/useHashRoute';
 
 type FindStatus = TaskStatus | 'archived';
@@ -62,7 +63,7 @@ function StatusChip({
     <button
       onClick={onClick}
       aria-pressed={on}
-      className="chip cursor-pointer transition-opacity"
+      className="chip chip-btn"
       style={{
         color: chip.color,
         border: `1px solid ${on ? chip.color : `${chip.color}33`}`,
@@ -81,7 +82,7 @@ function GroupToggle({ label, state, onClick }: { label: string; state: GroupSta
       onClick={onClick}
       aria-pressed={state === 'all' ? true : state === 'some' ? 'mixed' : false}
       title={state === 'all' ? `Clear ${label.toLowerCase()}` : `Select ${label.toLowerCase()}`}
-      className={`chip cursor-pointer border transition-colors ${
+      className={`chip chip-btn ${
         state === 'all' ? 'border-ink-muted text-ink-primary' : 'border-edge text-ink-muted hover:text-ink-primary'
       }`}
     >
@@ -258,8 +259,8 @@ export function FindView({
   return (
     <div className="space-y-4">
       <div>
-        <h1 className="glitch-title text-2xl sm:text-3xl">FIND</h1>
-        <p className="text-xs text-ink-muted mt-1 uppercase tracking-[0.2em]">
+        <h1 className="page-title">FIND</h1>
+        <p className="page-subtitle">
           search &amp; backlog across every project{wantsArchive ? ' + history archive' : ''}
         </p>
       </div>
@@ -281,8 +282,8 @@ export function FindView({
 
         {/* One status row: chips toggle individually; the "Pending" label and
             "All" toggle whole groups at once (replaces separate presets). */}
-        <div className="flex flex-wrap items-center gap-1.5" role="group" aria-label="Filter by status">
-          <span className="inline-flex flex-wrap items-center gap-1.5 rounded border border-edge px-1.5 py-1">
+        <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Filter by status">
+          <span className="inline-flex flex-wrap items-center gap-2 rounded-control border border-edge p-1.5">
             <GroupToggle label="Pending" state={groupState(PENDING)} onClick={() => toggleGroup(PENDING)} />
             {STATUS_CHIPS.filter((s) => PENDING.includes(s.key)).map((s) => (
               <StatusChip key={s.key} chip={s} on={statuses.includes(s.key)} onClick={() => toggleStatus(s.key)} />
@@ -299,7 +300,7 @@ export function FindView({
             <label className="label" htmlFor="find-project">Project</label>
             <select
               id="find-project"
-              className="field cursor-pointer"
+              className="field"
               value={projectId === '' ? '' : String(projectId)}
               onChange={(e) => update({ projectId: e.target.value ? Number(e.target.value) : '' })}
             >
@@ -317,7 +318,7 @@ export function FindView({
               <label className="label" htmlFor={`find-tag-${c.id}`}>{c.name}</label>
               <select
                 id={`find-tag-${c.id}`}
-                className="field cursor-pointer"
+                className="field"
                 value={tags[c.id] ?? ''}
                 onChange={(e) => update({ tags: { ...tags, [c.id]: e.target.value } })}
               >
@@ -334,7 +335,7 @@ export function FindView({
 
           <div>
             <label className="label" htmlFor="find-sort">Sort by</label>
-            <select id="find-sort" className="field cursor-pointer" value={sort} onChange={(e) => update({ sort: e.target.value })}>
+            <select id="find-sort" className="field" value={sort} onChange={(e) => update({ sort: e.target.value })}>
               <option value="newest">Created · newest</option>
               <option value="oldest">Created · oldest</option>
               <option value="updated">Recently updated</option>
@@ -348,13 +349,13 @@ export function FindView({
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center justify-between gap-2 text-[10px] uppercase tracking-wider text-ink-faint">
+        <div className="meta flex flex-wrap items-center justify-between gap-2">
           <span>
             {results.length} result{results.length === 1 ? '' : 's'}
             {wantsArchive && archived === null && !archiveError ? ' · loading archive…' : ''}
           </span>
           {!isDefault && (
-            <button className="text-neon-cyan hover:text-neon-cyan/70 uppercase tracking-wider" onClick={() => setFilters(DEFAULT_FILTERS)}>
+            <button className="link uppercase" onClick={() => setFilters(DEFAULT_FILTERS)}>
               reset filters
             </button>
           )}
@@ -362,7 +363,7 @@ export function FindView({
         {archiveError && (
           <p className="text-xs text-neon-magenta">
             Archive unavailable: {archiveError}{' '}
-            <button className="text-neon-cyan underline" onClick={() => void loadArchive()}>
+            <button className="link" onClick={() => void loadArchive()}>
               Retry
             </button>
           </p>
@@ -371,7 +372,7 @@ export function FindView({
 
       {results.length === 0 ? (
         <div className="panel p-10 text-center">
-          <p className="text-[11px] uppercase tracking-[0.3em] text-ink-faint">
+          <p className="empty-state">
             {statuses.length === 0 ? 'select at least one status' : 'no matching tasks'}
           </p>
         </div>
@@ -382,22 +383,19 @@ export function FindView({
             return (
               <li key={r.key}>
                 <button
-                  className="panel w-full text-left p-3 hover:border-neon-cyan/50 transition-colors"
+                  className="panel panel-link w-full text-left p-3"
                   onClick={() => (r.task ? setEditing(r.task) : r.entry ? setViewing(r.entry) : undefined)}
                 >
                   <div className="flex flex-wrap items-center gap-1.5">
-                    <span
-                      className="chip"
-                      style={{ color: chip.color, border: `1px solid ${chip.color}55`, background: `${chip.color}14` }}
-                    >
+                    <span className="chip" style={chipStyle(chip.color)}>
                       {chip.label}
                     </span>
-                    <span className="text-[10px] uppercase tracking-wider text-neon-cyan/80 truncate max-w-[50%]">
+                    <span className="meta text-neon-cyan/80 truncate max-w-[50%]">
                       {r.projectName}
                     </span>
-                    <span className="text-[9px] text-ink-faint">#{r.id}</span>
-                    {r.commentCount > 0 && <span className="text-[9px] text-neon-cyan/80">💬 {r.commentCount}</span>}
-                    <span className="ml-auto text-[9px] uppercase tracking-wider text-ink-faint" title={formatDateTime(r.createdAt)}>
+                    <span className="meta">#{r.id}</span>
+                    {r.commentCount > 0 && <span className="meta text-neon-cyan/80">💬 {r.commentCount}</span>}
+                    <span className="meta ml-auto" title={formatDateTime(r.createdAt)}>
                       created {relativeTime(r.createdAt)}
                     </span>
                   </div>
@@ -406,15 +404,7 @@ export function FindView({
                   {r.tags.length > 0 && (
                     <div className="mt-2 flex flex-wrap gap-1.5">
                       {r.tags.map((ref) => (
-                        <span
-                          key={ref.tagId}
-                          className="chip"
-                          style={{ color: ref.color, border: `1px solid ${ref.color}55`, background: `${ref.color}14` }}
-                          title={ref.categoryName}
-                        >
-                          <span className="w-1.5 h-1.5 rounded-full" style={{ background: ref.color }} />
-                          {ref.tagName}
-                        </span>
+                        <TagChip key={ref.tagId} tag={ref} />
                       ))}
                     </div>
                   )}

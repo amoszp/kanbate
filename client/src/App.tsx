@@ -50,11 +50,11 @@ function SessionGate() {
   if (session === null) return <LoginView onSignedIn={() => void check()} />;
   if (session === undefined) {
     return (
-      <div className="min-h-[100dvh] flex items-center justify-center text-xs uppercase tracking-[0.2em] text-ink-muted">
+      <div className="min-h-[100dvh] flex items-center justify-center text-xs uppercase tracking-label text-ink-muted">
         {offline ? (
           <span>
             Kanbate is unreachable.{' '}
-            <button className="text-neon-cyan underline" onClick={() => void check()}>
+            <button className="link" onClick={() => void check()}>
               Retry
             </button>
           </span>
@@ -107,11 +107,11 @@ function AppShell({ session, onSignOut }: { session: Session; onSignOut: () => P
       <Header route={route} navigate={navigate} loading={loading} />
       <main className="flex-1 w-full max-w-[1600px] mx-auto px-4 sm:px-6 pt-4">
         {loadError && (
-          <div className="panel border-neon-magenta/60 border p-4 text-sm text-neon-magenta mb-4">
-            <p className="font-bold uppercase tracking-widest">Connection error</p>
+          <div className="panel border-neon-magenta/60 p-4 text-sm text-neon-magenta mb-4" role="alert">
+            <p className="eyebrow">Connection error</p>
             <p className="mt-1 text-ink-muted">
               {loadError} — is the Kanbate API reachable?{' '}
-              <button className="text-neon-cyan underline" onClick={() => void refresh()}>
+              <button className="link" onClick={() => void refresh()}>
                 Retry
               </button>
             </p>
@@ -156,7 +156,7 @@ function AppShell({ session, onSignOut }: { session: Session; onSignOut: () => P
           <SettingsView categories={categories} refresh={refresh} session={session} onSignOut={onSignOut} />
         )}
       </main>
-      <footer className="text-center text-[10px] uppercase tracking-[0.3em] text-ink-faint py-5">
+      <footer className="text-center text-micro uppercase tracking-display text-ink-faint py-5">
         kanbate · local kanban for your lab
       </footer>
     </div>

@@ -77,7 +77,7 @@ export function QuickAddBar({
       </div>
       <div className="flex gap-2">
         <select
-          className="field flex-1 sm:flex-none sm:w-48 cursor-pointer"
+          className="field flex-1 sm:flex-none sm:w-48"
           value={projectId === '' ? '' : String(projectId)}
           onChange={(e) => setProjectId(e.target.value ? Number(e.target.value) : '')}
           aria-label="Target project"
@@ -89,7 +89,7 @@ export function QuickAddBar({
             </option>
           ))}
         </select>
-        <button type="submit" className="btn btn-solid" disabled={busy || projects.length === 0}>
+        <button type="submit" className="btn btn-primary" disabled={busy || projects.length === 0}>
           {busy ? 'Dispatching…' : 'Add +'}
         </button>
       </div>

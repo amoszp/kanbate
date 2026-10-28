@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { api } from '../api';
 import type { Comment, CommentTarget } from '../types';
 import { formatDateTime, relativeTime } from '../utils';
+import { ConfirmDialog } from './ConfirmDialog';
 
 /**
  * ServiceNow-style activity stream: user comments (work notes) interleaved
@@ -21,6 +22,7 @@ export function CommentsPanel({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showActivity, setShowActivity] = useState(true);
+  const [deleting, setDeleting] = useState<Comment | null>(null);
 
   const load = useCallback(async () => {
     try {
@@ -55,7 +57,7 @@ export function CommentsPanel({
   };
 
   const remove = async (c: Comment) => {
-    if (!window.confirm('Delete this comment?')) return;
+    setDeleting(null);
     try {
       await api.deleteComment(c.id);
       await load();
@@ -71,13 +73,13 @@ export function CommentsPanel({
   return (
     <section className="mt-5 border-t border-edge pt-4">
       <div className="flex items-center justify-between gap-2">
-        <p className="text-[11px] uppercase tracking-[0.2em] text-neon-cyan font-bold">
+        <p className="eyebrow text-neon-cyan">
           Activity · {userCount} comment{userCount === 1 ? '' : 's'}
         </p>
-        <label className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-ink-faint cursor-pointer select-none">
+        <label className="tap meta flex items-center gap-1.5 cursor-pointer select-none">
           <input
             type="checkbox"
-            className="accent-[#00f0ff]"
+            className="accent-neon-cyan"
             checked={showActivity}
             onChange={(e) => setShowActivity(e.target.checked)}
           />
@@ -101,7 +103,7 @@ export function CommentsPanel({
           aria-label="New comment"
         />
         <div className="mt-2 flex justify-end">
-          <button type="button" className="btn btn-cyan" onClick={() => void post()} disabled={busy || !draft.trim()}>
+          <button type="button" className="btn btn-secondary" onClick={() => void post()} disabled={busy || !draft.trim()}>
             {busy ? 'Posting…' : 'Post comment'}
           </button>
         </div>
@@ -111,28 +113,28 @@ export function CommentsPanel({
 
       <ol className="mt-3 space-y-2">
         {loading ? (
-          <li className="text-[10px] uppercase tracking-widest text-ink-faint">loading activity…</li>
+          <li className="meta">loading activity…</li>
         ) : visible.length === 0 ? (
-          <li className="text-[10px] uppercase tracking-widest text-ink-faint">no comments yet</li>
+          <li className="meta">no comments yet</li>
         ) : (
           visible.map((c) =>
             c.kind === 'system' ? (
-              <li key={c.id} className="flex items-baseline gap-2 text-[10px] text-ink-faint pl-3 border-l border-edge">
-                <span className="uppercase tracking-wider shrink-0" title={formatDateTime(c.createdAt)}>
+              <li key={c.id} className="flex items-baseline gap-2 text-micro text-ink-faint pl-3 border-l border-edge">
+                <span className="uppercase tracking-meta shrink-0" title={formatDateTime(c.createdAt)}>
                   {relativeTime(c.createdAt)}
                 </span>
                 <span className="break-words">{c.body}</span>
               </li>
             ) : (
-              <li key={c.id} className="rounded border border-edge border-l-2 border-l-neon-cyan/70 bg-backdrop px-3 py-2">
+              <li key={c.id} className="inset border-l-2 border-l-neon-cyan/70 px-3 py-2">
                 <div className="flex items-center justify-between gap-2">
-                  <span className="text-[10px] uppercase tracking-wider text-ink-muted" title={relativeTime(c.createdAt)}>
+                  <span className="meta text-ink-muted" title={relativeTime(c.createdAt)}>
                     {formatDateTime(c.createdAt)}
                   </span>
                   <button
                     type="button"
-                    className="text-[10px] text-ink-faint hover:text-neon-magenta transition-colors"
-                    onClick={() => void remove(c)}
+                    className="btn btn-plain danger btn-icon btn-sm -my-1 -mr-2"
+                    onClick={() => setDeleting(c)}
                     aria-label="Delete comment"
                   >
                     ✕
@@ -144,6 +146,15 @@ export function CommentsPanel({
           )
         )}
       </ol>
+
+      {deleting && (
+        <ConfirmDialog
+          title="Delete this comment?"
+          message={deleting.body.length > 140 ? `${deleting.body.slice(0, 140)}…` : deleting.body}
+          onConfirm={() => void remove(deleting)}
+          onCancel={() => setDeleting(null)}
+        />
+      )}
     </section>
   );
 }
